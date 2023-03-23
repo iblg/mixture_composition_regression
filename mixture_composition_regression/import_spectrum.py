@@ -1,6 +1,5 @@
 import pandas as pd
 
-
 def clean_data(filename):
     """
     Open and clean a csv file of data.

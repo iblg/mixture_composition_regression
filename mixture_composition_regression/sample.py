@@ -5,15 +5,20 @@ import matplotlib.pyplot as plt
 from matplotlib import colors
 
 
-class NIR_Sample:
-    def __init__(self, name, col_index, data, background=None, ww=None, wa=None, savefile=None):
+class Sample:
+    def __init__(self, name, col_index, data, background=None, w1=None, w2=None, savefile=None):
         """
+        Class for a single sample.
+
+        Parameters
+        ----------
         name : str
         The name of the sample.
 
         col_index : int
 
-        data :
+        data : array-like
+        The data (wavelength + absorption or transmission) associated with this sample.
 
         background : NIR_sample
         The background spectrum to be subtracted.
@@ -26,6 +31,13 @@ class NIR_Sample:
 
         savefile : str
         The filepath where you want to save to.
+
+        Returns
+        -------
+
+
+        Examples
+        --------
 
         """
 
@@ -73,6 +85,8 @@ class NIR_Sample:
 
     def plot(self, log_y=False, display=True, savefile=None):
         """
+        Plots the data associated with the sample. Contains options for displaying and saving the plot.
+
         log_y : bool
         Default False. If True, scale of y axis will be y.
 
@@ -117,22 +131,7 @@ class NIR_Sample:
         to_file.to_csv(self.savefile + ".csv", index=False)
         return
 
-    def get_wa_areas(self):
-        peaks = [[890, 929], [1034, 1095], [1158, 1205], [1602, 1630], [1662, 1714], [1715, 1759], [1800, 1838]]
-        wa_areas = []
-        for peak in peaks:
-            wa_areas.append(self.int_peak(peak[0], peak[1], log=False))
 
-        return wa_areas
-
-    def get_log_areas(self):
-        peaks = [[890, 929], [1034, 1095], [1158, 1205], [1602, 1630], [1662, 1714], [1715, 1759], [1800, 1838]]
-        areas = []
-
-        for peak in peaks:
-            areas.append(self.int_peak(peak[0], peak[1], log=True))
-
-        return areas
 
     def int_peak(self, low, high, log):
         """
