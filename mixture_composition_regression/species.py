@@ -10,8 +10,8 @@ class Species:
         self.name = name
         self.prop_dict = properties
         da = xr.DataArray(name)
-        for p_name, p_value in properties.items():
-            ds = ds.assign_coords(dim=)
+        # for p_name, p_value in properties.items():
+        #     ds = ds.assign_coords(dim=)
 
 
         self.da = da
