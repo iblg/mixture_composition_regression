@@ -24,7 +24,7 @@ def clean_data(filename):
     df = df.dropna(axis=1, how="all")
 
     row_cutoff = (
-        df.isna().idxmax("index").where(df.isna().any("index"))
+        df.isna().idxmax("index").where(df.isna().any(axis = "index"))
     )  # find a cutoff row by finding where there are any nan values
     row_cutoff = int(row_cutoff.mode()) - 1
 
