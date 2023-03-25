@@ -27,29 +27,8 @@ class Mixture:
 
 
 
-
 def main():
-    file = '/Users/ianbillinge/Documents/yiplab/programming/uvvisnir/1mm_pl/2023-03-22/2023-03-22.csv'
-    df = clean_data(file)
-    # print(df)
-    cp = {'name':['nacl', 'water'] ,
-          'mw':[58.44, 18.015],
-          'nu': [2, 1]}
-    s1 = Sample('s1', df, 0, 1, chem_properties = cp, w = [0.1, 0.9])
-    s3 = Sample('s1', df, 4,5, chem_properties = cp, w = [0.1, 0.9])
 
-    s2 = Sample('s2', df, 2, 3, chem_properties = cp, w = [0.2, 0.8])
-
-
-
-
-
-    m1 = Mixture(s1, s3, s2)
-    print(m1.da)
-    # da = s1.da
-    # da.loc[dict(nacl = 0.8, water = 0.2)] = s2.a
-
-    # da3.loc[dict(x = 2)] = 100 ### this is how you modify by spot.
     return
 
 if __name__ == '__main__':

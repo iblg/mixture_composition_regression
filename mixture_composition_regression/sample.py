@@ -11,6 +11,8 @@ class Sample:
         """
         Class for a single sample.
 
+
+
         Parameters
         ----------
         name : str
@@ -64,28 +66,17 @@ class Sample:
 
         self.w = w
 
-        da = xr.DataArray(self.a, dims = ['l'], coords = {'l':self.l})
-        for key, val in chem_properties.items():
-            da.attrs[key] = val
-        print(da)
+        dimensions = [i for i in chem_properties['name']]
+        dimensions.append('l')
 
+        coordinates = {'l':self.l}
+        for idx, chem in enumerate(chem_properties['name']):
+            coordinates[chem] = [w[idx]]
+        da = xr.DataArray(dims = dimensions, coords = coordinates)
 
-        #
-        #
-        # if background:
-        #     self.a = data.iloc[:, self.col + 1] - background.a
-        # else:
-        #     self.a = data.iloc[:, self.col + 1]
-        #
-        # self.wa_areas = self.get_wa_areas()
-        # self.log_wa_areas = self.get_log_areas()
-        #
-        # try:
-        #     self.ww_array = self.ww * np.ones_like(self.a)
-        #     self.wa_array = self.wa * np.ones_like(self.a)
-        # except TypeError as te:
-        #     print(te)
-        #     print("No ww provided")
+        da[:,:,:] = self.a
+        self.da = da
+
 
         if savefile:
             self.save_to_file()
@@ -165,11 +156,12 @@ class Sample:
     def check_w(self, w, chem_properties):
 
         #Check whether there are the same number of weights as there are chemicals.
-        if len(w) == len(chem_properties):
+        if len(w) == len(chem_properties['name']):
             pass
         else:
-            print('w is a different length from chem_properties. Ensure that there are an equal number of weight '
-                  'fractions and chemicals')
+            print('w is a different length from chem_properties in sample {}. '
+                  'Ensure that there are an equal number of weight fractions and chemicals'.format(self.name))
+
 
         # Check whether the weights add to 1.
         sum = 0
@@ -237,6 +229,7 @@ def main():
           'mw':[58.44, 18.015],
           'nu': [2, 1]}
     s1 = Sample('s1', df, 1, 2, chem_properties = cp, w = [0.1, 0.9])
+    print(s1.da)
 
 
     return

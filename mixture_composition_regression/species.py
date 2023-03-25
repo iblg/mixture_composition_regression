@@ -5,7 +5,7 @@ import xarray as xr
 class Species:
     def __init__(self, name, properties = {}):
         '''
-        Should return an xarray with coords of the dict.
+        Should take in a list of samples and return a dataset where it has concatenated them along an axis.
         '''
         self.name = name
         self.prop_dict = properties
@@ -19,10 +19,7 @@ class Species:
 
 def main():
     nacl = Species('nacl', properties = {'mw':58.44})
-    print(nacl.name)
-    print(nacl.prop_dict)
-    print(nacl.da)
-    print(nacl.da.dims)
+
 
     return
 
