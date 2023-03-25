@@ -228,7 +228,7 @@ def main():
     cp = {'name':['nacl', 'water'] ,
           'mw':[58.44, 18.015],
           'nu': [2, 1]}
-    s1 = Sample('s1', df, 1, 2, chem_properties = cp, w = [0.1, 0.9])
+    s1 = Sample('s1', df, 0, 1, chem_properties = cp, w = [0.1, 0.9])
     print(s1.da)
 
 
