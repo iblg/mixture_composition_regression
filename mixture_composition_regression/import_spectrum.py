@@ -1,7 +1,9 @@
+import pandas
 import pandas as pd
 import xarray as xr
 
-def clean_data(filename):
+
+def clean_data(filename: str) -> pandas.DataFrame:
     """
     Open and clean a csv file of data.
 
@@ -25,7 +27,7 @@ def clean_data(filename):
     df = df.dropna(axis=1, how="all")
 
     row_cutoff = (
-        df.isna().idxmax("index").where(df.isna().any(axis = "index"))
+        df.isna().idxmax("index").where(df.isna().any(axis="index"))
     )  # find a cutoff row by finding where there are any nan values
     row_cutoff = int(row_cutoff.mode()) - 1
 

@@ -1,13 +1,13 @@
 import pandas as pd
 import numpy as np
 import xarray as xr
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 from import_spectrum import clean_data
 
 
 class Sample:
-    def __init__(self, name, data, l_col_idx, data_col_idx, chem_properties = None, w = None, savefile=None, w_tol = 10**(-4.), background=None):
+    def __init__(self, name, data, l_col_idx, data_col_idx, chem_properties=None, w=None, savefile=None,
+                 w_tol=10 ** (-4.), background=None):
         """
         Class for a single sample.
 
@@ -54,6 +54,7 @@ class Sample:
 
         """
 
+        self.wa = None
         self.name = name
 
         self.l = data.iloc[:, l_col_idx]
@@ -61,24 +62,24 @@ class Sample:
         # self.la = np.concat(self.l, self.a, axis = 'columns')
 
         self.w_tol = w_tol
-        self.check_chem_properties(chem_properties) #ensure that w and chem_properties have same keys
-        self.check_w(w, chem_properties) #check whether the weights sum to 1.
+        self.check_chem_properties(chem_properties)  # ensure that w and chem_properties have same keys
+        self.check_w(w, chem_properties)  # check whether the weights sum to 1.
 
         self.w = w
 
         dimensions = [i for i in chem_properties['name']]
         dimensions.append('l')
 
-        coordinates = {'l':self.l}
+        coordinates = {'l': self.l}
         for idx, chem in enumerate(chem_properties['name']):
             coordinates[chem] = [w[idx]]
-        da = xr.DataArray(dims = dimensions, coords = coordinates)
+        da = xr.DataArray(dims=dimensions, coords=coordinates)
 
-        da[:,:,:] = self.a
+        da[:, :, :] = self.a
         self.da = da
 
-
         if savefile:
+            self.savefile = savefile
             self.save_to_file()
         return
 
@@ -130,8 +131,6 @@ class Sample:
         to_file.to_csv(self.savefile + ".csv", index=False)
         return
 
-
-
     # def int_peak(self, low, high, log):
     #     """
     #     Integrates the peak defined by low and high wavelengths.
@@ -155,13 +154,12 @@ class Sample:
 
     def check_w(self, w, chem_properties):
 
-        #Check whether there are the same number of weights as there are chemicals.
+        # Check whether there are the same number of weights as there are chemicals.
         if len(w) == len(chem_properties['name']):
             pass
         else:
             print('w is a different length from chem_properties in sample {}. '
                   'Ensure that there are an equal number of weight fractions and chemicals'.format(self.name))
-
 
         # Check whether the weights add to 1.
         sum = 0
@@ -174,9 +172,9 @@ class Sample:
             print('Weights do not sum to 1 in sample {}'.format(self.name))
         return
 
-    def check_chem_properties(self, chem_properties):
+    def check_chem_properties(self, chem_properties: dict) -> None:
         ## future development: This should check that the keylist in w
-        cp = chem_properties #for notational ease
+        cp = chem_properties  # for notational ease
         nchems = len(cp['name'])
 
         for key, val in chem_properties.items():
@@ -202,6 +200,7 @@ class Sample:
         #
         # return
 
+
 #
 # def int_peak(samples, low, high):
 #     areas = []
@@ -225,14 +224,14 @@ def main():
     file = '/Users/ianbillinge/Documents/yiplab/programming/uvvisnir/1mm_pl/2023-03-22/2023-03-22.csv'
     df = clean_data(file)
     # print(df)
-    cp = {'name':['nacl', 'water'] ,
-          'mw':[58.44, 18.015],
+    cp = {'name': ['nacl', 'water'],
+          'mw': [58.44, 18.015],
           'nu': [2, 1]}
-    s1 = Sample('s1', df, 0, 1, chem_properties = cp, w = [0.1, 0.9])
+    s1 = Sample('s1', df, 0, 1, chem_properties=cp, w=[0.1, 0.9])
     print(s1.da)
 
-
     return
+
 
 if __name__ == "__main__":
     main()
