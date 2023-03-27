@@ -1,33 +1,46 @@
 import pandas as pd
 import numpy as np
-import matplotlib as mpl
+import xarray as xr
 import matplotlib.pyplot as plt
-from matplotlib import colors
+from import_spectrum import clean_data
 
 
 class Sample:
-    def __init__(self, name, col_index, data, background=None, w1=None, w2=None, savefile=None):
+    def __init__(self, name, data, l_col_idx, data_col_idx, chem_properties=None, w=None, savefile=None,
+                 w_tol=10 ** (-4.), background=None):
         """
         Class for a single sample.
+
+
 
         Parameters
         ----------
         name : str
         The name of the sample.
 
-        col_index : int
+        l_col_index : int
+        The column index of the wavelength.
+
+        data_col_idx : int
+        The column index of the data (i.e., absorption, transmission).
 
         data : array-like
-        The data (wavelength + absorption or transmission) associated with this sample.
+        The data (wavelength + absorption or transmission) associated with this sample. data must be array-like, with
+        wavelengths stored in rows and the sample absorbance directly to
 
         background : NIR_sample
         The background spectrum to be subtracted.
 
-        ww : float
-        Weight fraction water
+        w : array-like
+        The weight fractions of the different chemicals.
 
-        wa : float
-        Weight fraction amine
+        w_tol : float, default 10**(-4).
+        The error tolerance for the sum of weight fractions.
+
+        chem_properties: dict
+        Keys of this dict should be ID of components. Vals should be a dict, where keys are names of parameters and vals
+        are values of those parameters. A simple example for NaCl/water mixture would be
+        species_properties = {'nacl': {'mw': 58.44}, 'water': {'mw': 18.015}}
 
         savefile : str
         The filepath where you want to save to.
@@ -41,45 +54,32 @@ class Sample:
 
         """
 
+        self.wa = None
         self.name = name
-        self.col = col_index
-        self.l = data.iloc[:, self.col]
-        self.ww = ww
-        self.wa = wa
-        self.savefile = savefile
 
-        if background:
-            self.a = data.iloc[:, self.col + 1] - background.a
-        else:
-            self.a = data.iloc[:, self.col + 1]
+        self.l = data.iloc[:, l_col_idx]
+        self.a = data.iloc[:, data_col_idx]
+        # self.la = np.concat(self.l, self.a, axis = 'columns')
 
-        self.wa_areas = self.get_wa_areas()
-        self.log_wa_areas = self.get_log_areas()
+        self.w_tol = w_tol
+        self.check_chem_properties(chem_properties)  # ensure that w and chem_properties have same keys
+        self.check_w(w, chem_properties)  # check whether the weights sum to 1.
 
-        try:
-            self.ww_array = self.ww * np.ones_like(self.a)
-            self.wa_array = self.wa * np.ones_like(self.a)
-        except TypeError as te:
-            print(te)
-            print("No ww provided")
+        self.w = w
 
-        self.bounds = {
-            "interval1": [283, 380],
-            "interval2": [930, 1030],
-            "interval3": [1048, 1082],
-            "interval4": [1083, 1133],
-            "interval5": [1310, 1360],
-            "interval6": [1592, 1745],
-        }
+        dimensions = [i for i in chem_properties['name']]
+        dimensions.append('l')
 
-        self.areas = {}
+        coordinates = {'l': self.l}
+        for idx, chem in enumerate(chem_properties['name']):
+            coordinates[chem] = [w[idx]]
+        da = xr.DataArray(dims=dimensions, coords=coordinates)
 
-        for area, bounds in self.bounds.items():
-            l1 = self.l.where((self.l > bounds[0]) & (self.l < bounds[1])).dropna()
-            a1 = self.a.where((self.l > bounds[0]) & (self.l < bounds[1])).dropna()
-            self.areas[area] = np.trapz(a1, x=l1)
+        da[:, :, :] = self.a
+        self.da = da
 
         if savefile:
+            self.savefile = savefile
             self.save_to_file()
         return
 
@@ -131,46 +131,106 @@ class Sample:
         to_file.to_csv(self.savefile + ".csv", index=False)
         return
 
+    # def int_peak(self, low, high, log):
+    #     """
+    #     Integrates the peak defined by low and high wavelengths.
+    #     """
+    #     y = self.a.where((self.l < high) & (self.l > low)).dropna()
+    #     x = self.l.where((self.l < high) & (self.l > low)).dropna()
+    #
+    #     if log == True:
+    #         y = np.log10(y)
+    #
+    #     y0 = y.iloc[-1]
+    #     y1 = y.iloc[0]
+    #     x0 = x.iloc[-1]
+    #     x1 = x.iloc[0]
+    #     baseline = y0 + (y1 - y0) / (x1 - x0) * (x - x0)  # x0 is lowest wavelength
+    #
+    #     y = y - baseline
+    #     area = np.trapz(y)
+    #
+    #     return area
+
+    def check_w(self, w, chem_properties):
+
+        # Check whether there are the same number of weights as there are chemicals.
+        if len(w) == len(chem_properties['name']):
+            pass
+        else:
+            print('w is a different length from chem_properties in sample {}. '
+                  'Ensure that there are an equal number of weight fractions and chemicals'.format(self.name))
+
+        # Check whether the weights add to 1.
+        sum = 0
+        for i in w:
+            sum += i
+
+        if np.abs(sum - 1) < self.w_tol:
+            pass
+        else:
+            print('Weights do not sum to 1 in sample {}'.format(self.name))
+        return
+
+    def check_chem_properties(self, chem_properties: dict) -> None:
+        ## future development: This should check that the keylist in w
+        cp = chem_properties  # for notational ease
+        nchems = len(cp['name'])
+
+        for key, val in chem_properties.items():
+            if len(val) == nchems:
+                pass
+            else:
+                print('Property {} in chem_values is different length than number of chemicals!'.format(key))
+
+        pass
+        #
+        # print(w.keys())
+        # print(chem_properties['name'])
+        # if np.array(w.keys()) == np.array(chem_properties['name']):
+        #     print('They are the same')
+        #     pass
+        # else:
+        #     print('keys of w and chem_properties are not the same for sample {}'.format(self.name))
+        #
+        # for kv1, kv2 in zip(w.items(),chem_properties.items()):
+        #     print(kv1)
+        #     print(kv2)
+        # #Future development should include something that goes through each key in
+        #
+        # return
 
 
-    def int_peak(self, low, high, log):
-        """
-        Integrates the peak defined by low and high wavelengths.
-        """
-        y = self.a.where((self.l < high) & (self.l > low)).dropna()
-        x = self.l.where((self.l < high) & (self.l > low)).dropna()
-
-        if log == True:
-            y = np.log10(y)
-
-        y0 = y.iloc[-1]
-        y1 = y.iloc[0]
-        x0 = x.iloc[-1]
-        x1 = x.iloc[0]
-        baseline = y0 + (y1 - y0) / (x1 - x0) * (x - x0)  # x0 is lowest wavelength
-
-        y = y - baseline
-        area = np.trapz(y)
-
-        return area
+#
+# def int_peak(samples, low, high):
+#     areas = []
+#     for sample in samples:
+#         y = sample.a.where((sample.l < high) & (sample.l > low)).dropna()
+#         x = sample.l.where((sample.l < high) & (sample.l > low)).dropna()
+#
+#         y0 = y.iloc[-1]
+#         y1 = y.iloc[0]
+#         x0 = x.iloc[-1]
+#         x1 = x.iloc[0]
+#         baseline = y0 + (y1 - y0) / (x1 - x0) * (x - x0)  # x0 is lowest wavelength
+#
+#         y = y - baseline
+#         area = np.trapz(y)
+#         areas.append(area)
+#     return areas
 
 
-def int_peak(samples, low, high):
-    areas = []
-    for sample in samples:
-        y = sample.a.where((sample.l < high) & (sample.l > low)).dropna()
-        x = sample.l.where((sample.l < high) & (sample.l > low)).dropna()
+def main():
+    file = '/Users/ianbillinge/Documents/yiplab/programming/uvvisnir/1mm_pl/2023-03-22/2023-03-22.csv'
+    df = clean_data(file)
+    # print(df)
+    cp = {'name': ['nacl', 'water'],
+          'mw': [58.44, 18.015],
+          'nu': [2, 1]}
+    s1 = Sample('s1', df, 0, 1, chem_properties=cp, w=[0.1, 0.9])
+    print(s1.da)
 
-        y0 = y.iloc[-1]
-        y1 = y.iloc[0]
-        x0 = x.iloc[-1]
-        x1 = x.iloc[0]
-        baseline = y0 + (y1 - y0) / (x1 - x0) * (x - x0)  # x0 is lowest wavelength
-
-        y = y - baseline
-        area = np.trapz(y)
-        areas.append(area)
-    return areas
+    return
 
 
 if __name__ == "__main__":
