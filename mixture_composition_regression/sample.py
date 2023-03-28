@@ -68,15 +68,15 @@ class Sample:
 
         self.w = w
 
-        dimensions = [i for i in chem_properties['name']]
-        dimensions.append('l')
+        dimensions = ['name', 'l']
+        coordinates = {'l': self.l, 'name': [self.name]}
+        da = xr.DataArray(self.a.values.reshape(1, -1), dims=dimensions, coords=coordinates)
 
-        coordinates = {'l': self.l}
+        composition = {}
         for idx, chem in enumerate(chem_properties['name']):
-            coordinates[chem] = [w[idx]]
-        da = xr.DataArray(dims=dimensions, coords=coordinates)
+            composition[chem] = [w[idx]]
+            da = da.assign_coords({chem: ("name", [w[idx]])})
 
-        da[:, :, :] = self.a
         self.da = da
 
         if savefile:

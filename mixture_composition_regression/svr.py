@@ -6,6 +6,7 @@ from mixture_composition_regression.sample import Sample
 from mixture_composition_regression.mixture import Mixture
 from mixture_composition_regression.import_spectrum import clean_data
 import matplotlib.pyplot as plt
+import xarray as xr
 
 
 def import_training_set():
@@ -128,10 +129,26 @@ def get_target_input(m: mixture_composition_regression.mixture.Mixture) -> objec
     :return:
     """
     da = m.da
-    coords = da.coords
-    print(da)
-    # del coords['l']
     chems = m.chem_properties['name']
+    nsamples = len(da.coords[chems[-1]])
+    # print('nsamples:')
+    # print(nsamples)
+    coords = da.coords
+    del coords['l']
+
+    for i in range(nsamples):
+        composition = []
+        for coord, val in coords.items():
+            # print(coord)
+            # print(val)
+            composition.append(val[i].values)
+        # print('sample {}'.format(i))
+        # print('Composition:')
+        # print(composition)
+        # spect =
+    coords = da.coords
+    # print(da)
+    # del coords['l']
     comps = []
 
     for idx, i in enumerate(da.coords[chems[0]]):
@@ -147,11 +164,44 @@ def get_target_input(m: mixture_composition_regression.mixture.Mixture) -> objec
 
     return
 
+def get_target_input_2(m):
+    X = []
+    y = []
+    da = m.da
+    for idx, val in enumerate(da.water.values):
+        # print(idx)
+        # print(val)
+        waterval = da.water.values[idx]
+        saltval = da.nacl.values[idx]
+        dipaval = da.dipa.values[idx]
+        # print(waterval, saltval, dipaval)
+        # selection = da.sel({'water': val}, method='nearest').dropna(dim = 'nacl', how = 'all').dropna(dim = 'dipa', how = 'all')
+        selection = da.sel({'water':waterval, 'nacl':saltval, 'dipa':dipaval})
+        # print('\n \n \n Selection:')
+        # print(selection)
+            # .dropna(dim='water', how='all')
+        lmin = 1245
+        lmax = 1265
+        bds = (selection.l.values > lmin) & (selection.l.values < lmax)
+        selection = selection.where(bds).dropna(dim='l')
+        l = selection.l.values
+        # a = selection.values[0, :]
+
+        y.append(val)
+        # X.append(a)
+
+    return y, X
 
 def main():
+    # m1 = import_training_set()
     m1 = import_small_training_set()
+
+
     # plot_single(m1)
-    get_target_input(m1)
+    # get_target_input(m1)
+    # y, X = get_target_input_2(m1)
+
+
 
     return
 
