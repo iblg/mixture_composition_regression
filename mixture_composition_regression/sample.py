@@ -76,7 +76,6 @@ class Sample:
         for idx, chem in enumerate(chem_properties['name']):
             composition.append(w[idx])
             da = da.assign_coords({chem: ("name", [w[idx]])})
-        da.attrs['composition'] = composition
         self.da = da
 
         if savefile:

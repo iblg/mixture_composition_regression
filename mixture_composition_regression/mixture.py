@@ -31,7 +31,7 @@ class Mixture:
 
         # check for duplicate samples. If duplicates, then add a trivial amount onto each coord.
         for s in range(len(samples)):
-            for s2 in range(s, len(samples)):
+            for s2 in range(s + 1, len(samples)):
                 if samples[s].name == samples[s2].name:
                     print('Two samples have duplicate names! {} and {}.'.format(samples[s].name, samples[s2].name))
         # for s in range(len(samples)):
@@ -59,11 +59,8 @@ class Mixture:
         da_list = []
         for s in samples:
             da_list.append(s.da)
-            print(s.name)
-            print(s.da)
         da = xr.concat(da_list, dim = 'name')
         # da = xr.combine_by_coords(da_list)  # this is the meaty part of the function. This does all the work.
         self.da = da
-        print(self.da)
         self.chem_properties = samples[0].chem_properties
         return
