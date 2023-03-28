@@ -60,6 +60,7 @@ class Sample:
         self.l = data.iloc[:, l_col_idx]
         self.a = data.iloc[:, data_col_idx]
         # self.la = np.concat(self.l, self.a, axis = 'columns')
+        self.chem_properties = chem_properties
 
         self.w_tol = w_tol
         self.check_chem_properties(chem_properties)  # ensure that w and chem_properties have same keys

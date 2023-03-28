@@ -1,5 +1,7 @@
 import numpy as np
 import xarray as xr
+
+import mixture_composition_regression.sample
 from sample import Sample
 
 
@@ -22,19 +24,21 @@ class Mixture:
 
         # check that all are samples
         for s in samples:
-            if isinstance(s, Sample):
+            if isinstance(s, mixture_composition_regression.sample.Sample):
                 pass
             else:
                 print('Mixture __init__ got passed something that isn\'t a sample!')
 
-        # check for duplicate samples. If duplicates, then add a trivial amount onto one coord.
+        # check for duplicate samples. If duplicates, then add a trivial amount onto each coord.
         for s in range(len(samples)):
-            for s2 in range(s + 1, len(samples)):
+            for s2 in range(s, len(samples)):
                 # print('Comparing samples {} and {}'.format(samples[s].name, samples[s2].name))
                 try:
                     xr.align(samples[s].da, samples[s2].da, join='exact')
-                    samples[s2].da.coords[coordinates[-1]] = samples[s2].da.coords[
-                                                                 coordinates[-1]] + np.random.rand() * 10 ** -9
+                    for idx, coord in enumerate(coordinates):
+                        samples[s2].da.coords[coordinates[idx]] = samples[s2].da.coords[
+                                                                 coordinates[idx]] + np.random.rand() * 10 ** -9
+                
                     # print('We added some randomness')
                 except ValueError:
                     # print('No need for randomness')
@@ -43,9 +47,10 @@ class Mixture:
         da_list = []
         for s in samples:
             da_list.append(s.da)
-        da = xr.combine_by_coords(da_list)  # this is the meatty part of the function. This does all the work.
+        da = xr.combine_by_coords(da_list)  # this is the meaty part of the function. This does all the work.
 
         self.da = da
+        self.chem_properties = samples[0].chem_properties
         return
 
 
