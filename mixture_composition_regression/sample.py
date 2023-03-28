@@ -72,11 +72,11 @@ class Sample:
         coordinates = {'l': self.l, 'name': [self.name]}
         da = xr.DataArray(self.a.values.reshape(1, -1), dims=dimensions, coords=coordinates)
 
-        composition = {}
+        composition = []
         for idx, chem in enumerate(chem_properties['name']):
-            composition[chem] = [w[idx]]
+            composition.append(w[idx])
             da = da.assign_coords({chem: ("name", [w[idx]])})
-
+        da.attrs['composition'] = composition
         self.da = da
 
         if savefile:
