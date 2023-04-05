@@ -1,26 +1,33 @@
-# from typing import Dict
-from sklearn.svm import SVR
-from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
-from sklearn.linear_model import Ridge
-from sklearn.linear_model import RidgeCV
+from sklearn.preprocessing import OneHotEncoder
+
 from sklearn.compose import TransformedTargetRegressor
 from sklearn.compose import make_column_transformer
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.metrics import median_absolute_error
+
 from sklearn.metrics import PredictionErrorDisplay
+from sklearn.metrics import median_absolute_error
+
+from sklearn.svm import SVR
+from sklearn.linear_model import RidgeCV
+from sklearn.linear_model import Ridge
 
 import numpy as np
-import scipy as sp
-
-import mixture_composition_regression.mixture
-from mixture_composition_regression.sample import Sample
-from mixture_composition_regression.mixture import Mixture
-from mixture_composition_regression.import_spectrum import clean_data
 import matplotlib.pyplot as plt
-import xarray as xr
 
-def get_Xy(m, lbounds=None):
+
+def get_Xy(m, lbounds=(900, 3200)):
+    """
+
+    :param lbounds: tuple, default (900, 3200).
+    The lower and upper bounds on the wavelength.
+    :param m: Mixture object.
+
+    :return:
+    :param y: numpy array
+    Contains the target variable.
+    :param X: numpy array
+    Contains the training variables.
+    """
     # X = []
     y = []
     da = m.da

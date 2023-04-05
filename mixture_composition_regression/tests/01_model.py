@@ -1,20 +1,22 @@
 from mixture_composition_regression.preprocessor_pipeline import *
 from mixture_composition_regression.tests.import_training_set import import_training_set
+from sklearn.model_selection import train_test_split
+
 
 def main():
     preprocessor = get_preprocessor()
-    # model = get_pipeline(preprocessor, regr=Ridge(alpha=10**-7))
-    model = get_pipeline(preprocessor, regr=RidgeCV(alphas=np.logspace(-20, 20, 21)))
-    # model = get_pipeline(preprocessor, regr=SVR(gamma='scale', epsilon=0.0001))
-    #does well regressing DIPA between 2000, 2500
+    model = get_pipeline(preprocessor, regr=Ridge(alpha=10**-3))
+    # model = get_pipeline(preprocessor, regr=RidgeCV(alphas=np.logspace(-20, 20, 21)))
+    # model = get_pipeline(preprocessor, regr=SVR(gamma='scale', epsilon=0.001))
+    # does well regressing DIPA between 2000, 2500
     m1 = import_training_set()
-    lbounds = [2000, 2500]
+    lbounds = [2300, 2800]
     y, X = get_Xy(m1, lbounds=lbounds)
     # X = np.log10(X)
-    y = y[:, 0]  # only regress water
-    # y = y[:, 1]  # only regress dipa
+    # y = y[:, 0]  # only regress water
+    y = y[:, 1]  # only regress dipa
     # y = y[:, 2]  # only regress nacl
-    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42, test_size=0.25)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
 
