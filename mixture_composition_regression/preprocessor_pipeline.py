@@ -15,7 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def get_Xy(m, lbounds=(900, 3200)):
+def get_Xy(m, lbounds=(900, 3200), ycol=None):
     """
 
     :param lbounds: tuple, default (900, 3200).
@@ -65,6 +65,10 @@ def get_Xy(m, lbounds=(900, 3200)):
             y = np.append(y, comp, axis=1)
 
     X, y = X.T, y.T
+    if ycol is None:
+        pass
+    else:
+        y = y[:, ycol]
     return y, X
 
 
