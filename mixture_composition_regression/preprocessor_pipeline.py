@@ -108,7 +108,7 @@ def identity(x):
     return x
 
 
-def plot_mae(y_test, y_train, y_pred, mae_test, mae_train):
+def plot_mae(y_test, y_train, y_pred, mae_test, mae_train, wl_window=None):
     scores = {
         "MedAE on training set": f"{mae_train:.4f}",
         "MedAE on testing set": f"{mae_test:.4f}",
@@ -119,6 +119,13 @@ def plot_mae(y_test, y_train, y_pred, mae_test, mae_train):
         y_test, y_pred, kind="actual_vs_predicted", ax=ax, scatter_kwargs={"alpha": 0.5}
     )
     # ax.set_title("Ridge model, small regularization")
+    if wl_window is None:
+        pass
+    else:
+        ax.text(0.95, 0.1, r'$\lambda_{\mathrm{min}} =$' + '{:3.1f}'.format(wl_window[0]), transform=ax.transAxes,
+                ha='right', va='bottom')
+        ax.text(0.95, 0.05, r'$\lambda_{\mathrm{max}} =$' + '{:3.1f}'.format(wl_window[1]), transform=ax.transAxes,
+                ha='right', va='bottom')
     for name, score in scores.items():
         ax.plot([], [], " ", label=f"{name}: {score}")
     ax.legend(loc="upper left")
