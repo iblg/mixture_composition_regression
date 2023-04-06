@@ -1,0 +1,152 @@
+import sklearn as skl
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import train_test_split
+from sklearn.kernel_ridge import KernelRidge
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.gaussian_process.kernels import ExpSineSquared
+
+import numpy as np
+from mixture_composition_regression.tests.import_training_set import import_training_set
+from mixture_composition_regression.preprocessor_pipeline import *
+
+
+# They need to be able to try different models, different params within those models, and different wavelength ranges
+
+def cv_on_model_and_wavelength(m, wl, models, ycol=None, tts_test_size=None, tts_random_state=None, mae_tolerance=0.01):
+    """
+
+    :param mae_tolerance:
+    :param tts_random_state:
+    :param tts_test_size:
+    :param ycol:
+    :param m: Mixture
+    :param wl: wavelength list
+    :param models: GridSearchCV objects
+    :return:
+    """
+    best_mae_train, best_mae_test = 1E10, 1E10
+    viable_models = []
+    first = 0
+    for idx, model in enumerate(models):
+        print('\n \n \nModel number {}'.format(idx))
+        print(model.estimator)
+        for l_window in wl:
+            l_window[0] -= 1E-5 # this stops the bottom-most interval from being shorter than the others.
+            y, X = get_Xy(m, lbounds=l_window, ycol=ycol)  # get y, X data
+
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=tts_test_size,
+                                                                random_state=tts_random_state)
+            model_instance = model.fit(X_train,
+                                       y_train)  # model instance is the model with optimized params by gridsearch CV
+
+            # Evaluate the model
+            y_pred = model_instance.predict(X_test)
+            mae_train = median_absolute_error(y_train, model_instance.predict(X_train))
+            mae_test = median_absolute_error(y_test, y_pred)
+
+            if mae_test < mae_tolerance:
+                viable_models.append([model, l_window])
+
+            if mae_train < best_mae_train:
+                best_mae_train = mae_train
+                best_mae_train_model = (model_instance, l_window, mae_train)
+
+            if mae_test < best_mae_test:
+                best_mae_test = mae_test
+                best_mae_test_model = (model_instance, l_window, mae_test)
+                print(l_window)
+                print(X[0])
+
+            # print('We\'ve converged on the params for this wavelength window.')
+            # # print('l_window: {}'.format(l_window))
+            # print(model_instance.score(X_test, y_test))
+            # print(model_instance.best_params_)
+    return viable_models, best_mae_test_model, best_mae_train_model
+
+
+def get_window_list(start, end, nwindows=None, width=None):
+    if (nwindows is None) and (width is None):
+        print('nwindows or width must be specified.')
+        print('A default of 1 window has been applied')
+        nwindows = 1
+
+    # get nwindows if width is provided
+    if nwindows is None:
+        nwindows = int((end - start) / width)
+    else:  # if nwindows is provided
+        # check nwindows is int
+        if type(nwindows) is int:
+            pass
+        else:
+            print('nwindows is not an int.')
+
+        width = int((end - start) / nwindows)
+
+    starts = np.linspace(start, end - width, nwindows).reshape((-1, 1))
+    ends = np.linspace(start + width, end, nwindows).reshape((-1, 1))
+
+    windows = np.concatenate((starts, ends), axis=1)
+    return windows
+
+
+def main():
+    m = import_training_set()  # create a mixture
+    lbounds = [2027, 2050]  # set global bounds on wavelength
+    nwindows = 1
+    wl = get_window_list(lbounds[0], lbounds[1], nwindows=nwindows)  # get a list of windows you want to look at
+
+    ridge = GridSearchCV(
+        Ridge(),
+        # {'alpha': np.logspace(-10, 10, 11)}
+        {'alpha': [1E-3]}
+    )
+
+    kr = GridSearchCV(
+        KernelRidge(),
+        param_grid={'kernel': "rbf", "alpha": np.logspace(-5, 5, 11), "gamma": np.logspace(-5, 5, 11)},
+    )
+    svr = GridSearchCV(SVR(),
+                       {'kernel': ['linear', 'rbf'],
+                        'gamma': ['scale', 'auto'],
+                        'epsilon': np.logspace(-5, 5, 10)
+                        })
+    rnr = GridSearchCV(KNeighborsRegressor(), {'n_neighbors': 5 + np.arange(10)})
+
+    cv_models = [
+        ridge,
+        # kr,
+        # svr,
+        # rnr
+    ]
+    random_state = 42
+    tts_size = 0.25
+    ycol = 0
+    viable_models, best_test_model, best_train_model = cv_on_model_and_wavelength(m, wl, cv_models,
+                                                                                  ycol=ycol,
+                                                                                  tts_test_size=tts_size,
+                                                                                  tts_random_state=random_state,
+                                                                                  mae_tolerance=5E-3)
+
+    # for mod in viable_models:
+    #     print(mod[1])
+    #     print(mod[0].best_params_)
+
+    # print('Best model:')
+    # print(best_test_model[1])
+    # print(best_test_model[0].best_params_)
+    # print(best_test_model[2])
+
+    y, X = get_Xy(m, lbounds=best_test_model[1], ycol=ycol)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=tts_size,
+                                                        random_state=random_state)
+    print(best_test_model[1])
+    print(X[0])
+    y_pred = best_test_model[0].predict(X_test)
+    mae_train = median_absolute_error(y_train, best_test_model[0].predict(X_train))
+    mae_test = median_absolute_error(y_test, y_pred)
+    plot_mae(y_test, y_train, y_pred, mae_test, mae_train)
+    return
+
+
+if __name__ == '__main__':
+    main()

@@ -2,12 +2,14 @@ import pandas as pd
 import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
-from import_spectrum import clean_data
+from mixture_composition_regression.import_spectrum import clean_data
 
 
 class Sample:
-    def __init__(self, name, data, l_col_idx, data_col_idx, chem_properties=None, w=None, savefile=None,
-                 w_tol=10 ** (-4.), background=None):
+    def __init__(self, name, data, l_col_idx, data_col_idx, chem_properties=None, w=None,
+                 savefile=None,
+                 w_tol=10 ** (-4.),
+                 background=None):
         """
         Class for a single sample.
 
@@ -60,6 +62,7 @@ class Sample:
         self.l = data.iloc[:, l_col_idx]
         self.a = data.iloc[:, data_col_idx]
         # self.la = np.concat(self.l, self.a, axis = 'columns')
+        self.chem_properties = chem_properties
 
         self.w_tol = w_tol
         self.check_chem_properties(chem_properties)  # ensure that w and chem_properties have same keys
@@ -67,15 +70,14 @@ class Sample:
 
         self.w = w
 
-        dimensions = [i for i in chem_properties['name']]
-        dimensions.append('l')
+        dimensions = ['name', 'l']
+        coordinates = {'l': self.l, 'name': [self.name]}
+        da = xr.DataArray(self.a.values.reshape(1, -1), dims=dimensions, coords=coordinates)
 
-        coordinates = {'l': self.l}
+        composition = []
         for idx, chem in enumerate(chem_properties['name']):
-            coordinates[chem] = [w[idx]]
-        da = xr.DataArray(dims=dimensions, coords=coordinates)
-
-        da[:, :, :] = self.a
+            composition.append(w[idx])
+            da = da.assign_coords({chem: ("name", [w[idx]])})
         self.da = da
 
         if savefile:
@@ -83,7 +85,7 @@ class Sample:
             self.save_to_file()
         return
 
-    def plot(self, log_y=False, display=True, savefile=None):
+    def plot(self, log_y=False, display=True, savefile=None, fig=None, ax=None):
         """
         Plots the data associated with the sample. Contains options for displaying and saving the plot.
 
@@ -97,11 +99,16 @@ class Sample:
         Default None. If not None,
 
         """
-        fig, ax = plt.subplots()
+        if (fig is not None) & (ax is not None):
+            fig, ax = fig, ax
+        else:
+            fig, ax = plt.subplots()
         ax.plot(self.l, self.a)
         ax.set_title(self.name)
         ax.set_xlabel(r"Wavelength, $\lambda$ [nm]")
-        ax.set_ylabel(r"Absorption")
+        ax.set_ylabel(r"Absorbance")
+
+        plt.tight_layout()
 
         if log_y == True:
             ax.set_yscale("log")
@@ -110,9 +117,10 @@ class Sample:
             plt.show()
 
         if savefile is not None:
-            fig.savefile(savefile)
+            fig.savefig(savefile + '.png', dpi=500)
+            fig.savefig(savefile + '.pdf')
 
-        return
+        return fig, ax
 
     def save_to_file(self):
         # ww = pd.DataFrame(self.ww * np.ones_like(self.a).reshape(-1,1))
