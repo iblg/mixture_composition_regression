@@ -7,8 +7,6 @@ from sklearn.compose import make_column_transformer
 from sklearn.metrics import PredictionErrorDisplay
 from sklearn.metrics import median_absolute_error
 
-from sklearn.svm import SVR
-from sklearn.linear_model import RidgeCV
 from sklearn.linear_model import Ridge
 
 import numpy as np

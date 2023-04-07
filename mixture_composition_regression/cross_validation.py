@@ -2,6 +2,7 @@ import sklearn as skl
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import train_test_split
 from sklearn.kernel_ridge import KernelRidge
+from sklearn.svm import SVR
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.gaussian_process.kernels import ExpSineSquared
 
@@ -93,20 +94,20 @@ def get_window_list(start, end, nwindows=None, width=None):
 
 
 def main():
-    m = import_training_set()  # create a mixture
-    lbounds = [900, 3200]  # set global bounds on wavelength
-    nwindows = 80
+    m, m2, m3 = import_training_set()  # create a mixture
+    m.plot_by(idx=1, savefig='plotby', alpha=1, logy=True, cmap_name='viridis', spect_bounds=[1200, 3000])
+
+    lbounds = [1200, 3200]  # set global bounds on wavelength
+    nwindows = 30
     wl = get_window_list(lbounds[0], lbounds[1], nwindows=nwindows)  # get a list of windows you want to look at
     # best model so far: lbounds 2027, 2050, 10**-3 alpha, Ridge()
-
     sc = 'r2'
-
     ridge = GridSearchCV(
         Ridge(),
         # {'alpha': np.logspace(-10, 10, 11)}
         {'alpha': np.logspace(-5, 5, 11)},
         scoring=sc,
-        cv=9
+        cv=5
     )
 
     kr = GridSearchCV(
@@ -123,7 +124,7 @@ def main():
          'gamma': ['scale', 'auto'],
          'epsilon': np.logspace(-5, 5, 10)
          },
-        scoring = sc,
+        scoring=sc,
     )
 
     knnr = GridSearchCV(
@@ -134,29 +135,25 @@ def main():
 
     cv_models = [
         ridge,
-        # kr,
+        kr,
         svr,
         knnr
     ]
     random_state = 42
     tts_size = 0.25
     # ycol = 0  # water
-    # ycol = 1  # dipa
-    ycol = 2  # salt
+    ycol = 1  # dipa
+    # ycol = 2  # salt
     viable_models, best_model = cv_on_model_and_wavelength(m, wl, cv_models,
                                                            ycol=ycol,
                                                            tts_test_size=tts_size,
                                                            tts_random_state=random_state,
                                                            mae_tolerance=1E-3)
 
-    for mod in viable_models:
-        print(mod[1])
-        print(mod[0])
-
     print('Best model:')
     print(best_model[1])
     print(best_model[0])
-
+    #
     y, X = get_Xy(m, lbounds=best_model[1], ycol=ycol)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=tts_size,
                                                         random_state=random_state)

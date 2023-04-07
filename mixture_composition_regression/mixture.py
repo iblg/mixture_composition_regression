@@ -3,7 +3,9 @@ import xarray as xr
 import mixture_composition_regression
 from mixture_composition_regression.import_spectrum import clean_data
 from mixture_composition_regression.sample import Sample
-
+import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec
+from matplotlib import cm
 
 class Mixture:
     """
@@ -21,9 +23,7 @@ class Mixture:
 
     def __init__(self,
                  samples,
-                 attrs=None,
-                 savefile=None,
-                 savefile_mode='w'):
+                 attrs=None):
         """
         Create a Mixture object.
 
@@ -53,21 +53,59 @@ class Mixture:
         da = xr.concat(da_list, dim='name')
         self.da = da
         self.chem_properties = samples[0].chem_properties
-
-        # check savefile mode
-        _check_savefile_mode(savefile_mode)
-
-        if savefile is None:
-            pass
-        else:
-            da.to_netcdf(savefile, mode=savefile_mode)
-
+        self.samples = samples
         return
 
     def __add__(self, other):
         _check_chem_properties(self, other)
         self.da = xr.concat([self.da, other.da], dim='name')
+        [self.samples.append(s) for s in other.samples]
         return self
+
+    def savefile(self, savefile, mode='w'):
+        _check_savefile_mode(mode)
+
+        self.da.to_netcdf(savefile, mode=mode)
+        return
+
+    def plot_by(self, idx=0, cmap_name='cividis', savefig=None, alpha=1, logy=False, spect_bounds=None):
+        fig = plt.figure()
+        gs = GridSpec(1, 1, left=0.15, bottom=0.15, right=0.98, top=0.98)
+        ax = fig.add_subplot(gs[0])
+
+
+        cmap = cm.get_cmap(cmap_name)
+        # x = []
+        # for s in self.samples:
+        #     x.append(s.w[idx])
+        x = [s.w[idx] for s in self.samples]
+
+        sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=min(x), vmax=max(x)))
+        plt.colorbar(sm, ax=ax)
+
+
+
+        for s in self.samples:
+            c = s.w[idx]
+            if spect_bounds is None:
+                l, a = s.l, s.a
+            else:
+                l = s.l.where((s.l > spect_bounds[0]))
+                a = s.a.where((s.l > spect_bounds[0]))
+                l = l.where((s.l < spect_bounds[1]))
+                a = a.where((s.l < spect_bounds[1]))
+            ax.plot(l, a, color=cmap(c), alpha=alpha)
+
+        # plt.colorbar(ax, cax=cbar)
+        if logy is True:
+            ax.set_yscale('log')
+
+        if savefig is None:
+            pass
+        else:
+            plt.savefig(savefig + '.png', dpi=400)
+
+        return
 
 
 def _check_samples(samples):
