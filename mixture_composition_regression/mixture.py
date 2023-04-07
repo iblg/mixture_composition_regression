@@ -64,6 +64,11 @@ class Mixture:
 
         return
 
+    def __add__(self, other):
+        _check_chem_properties(self, other)
+        self.da = xr.concat([self.da, other.da], dim='name')
+        return self
+
 
 def _check_samples(samples):
     # check that all are samples
@@ -82,10 +87,18 @@ def _check_samples(samples):
 
 
 def _check_savefile_mode(savefile_mode):
-    if savefile_mode is 'w':
+    if savefile_mode == 'w':
         pass
-    elif savefile_mode is 'a':
+    elif savefile_mode == 'a':
         pass
     else:
         print('savefile mode for mixture must be either \'w\' or \'a\' but is neither.')
+    return
+
+
+def _check_chem_properties(first, second):
+    if first.chem_properties == second.chem_properties:
+        pass
+    else:
+        print('First mixture and second mixture do not have the same chemical properties.')
     return

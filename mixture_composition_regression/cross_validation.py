@@ -5,6 +5,8 @@ from sklearn.kernel_ridge import KernelRidge
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.gaussian_process.kernels import ExpSineSquared
 
+from sklearn.metrics import mean_squared_error
+
 import numpy as np
 from mixture_composition_regression.tests.import_training_set import import_training_set
 from mixture_composition_regression.preprocessor_pipeline import *
@@ -41,6 +43,8 @@ def cv_on_model_and_wavelength(m, wl, models, ycol=None, tts_test_size=None, tts
 
             # Evaluate the model
             y_pred = model_instance.predict(X_test)
+            # mae_test = mean_squared_error(y_train, model_instance.predict(X_train))
+            # mae_train = mean_squared_error(y_test, y_pred)
             mae_train = median_absolute_error(y_train, model_instance.predict(X_train))
             mae_test = median_absolute_error(y_test, y_pred)
 
@@ -95,35 +99,43 @@ def main():
     wl = get_window_list(lbounds[0], lbounds[1], nwindows=nwindows)  # get a list of windows you want to look at
     # best model so far: lbounds 2027, 2050, 10**-3 alpha, Ridge()
 
+    sc = 'r2'
+
     ridge = GridSearchCV(
         Ridge(),
         # {'alpha': np.logspace(-10, 10, 11)}
-        {'alpha': np.logspace(-5, 5, 11)}
+        {'alpha': np.logspace(-5, 5, 11)},
+        scoring=sc,
+        cv=9
     )
 
-    # kr = GridSearchCV(
-    #     KernelRidge(),
-    #     param_grid={'kernel': ["rbf"],
-    #                 "alpha": np.logspace(-5, 5, 11),
-    #                 "gamma": np.logspace(-5, 5, 11)},
-    # )
+    kr = GridSearchCV(
+        KernelRidge(),
+        param_grid={'kernel': ["rbf", 'linear'],
+                    "alpha": np.logspace(-5, 5, 11),
+                    "gamma": np.logspace(-5, 5, 11)},
+        scoring=sc,
+    )
 
-    # svr = GridSearchCV(
-    #     SVR(),
-    #     {'kernel': ['linear', 'rbf'],
-    #      'gamma': ['scale', 'auto'],
-    #      'epsilon': np.logspace(-5, 5, 10)
-    #      })
+    svr = GridSearchCV(
+        SVR(),
+        {'kernel': ['linear', 'rbf'],
+         'gamma': ['scale', 'auto'],
+         'epsilon': np.logspace(-5, 5, 10)
+         },
+        scoring = sc,
+    )
 
     knnr = GridSearchCV(
         KNeighborsRegressor(),
-        {'n_neighbors': 5 + np.arange(10)}
+        {'n_neighbors': 5 + np.arange(10)},
+        scoring=sc
     )
 
     cv_models = [
         ridge,
         # kr,
-        # svr,
+        svr,
         knnr
     ]
     random_state = 42

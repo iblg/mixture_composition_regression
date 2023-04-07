@@ -98,17 +98,26 @@ def import_training_set():
     s11 = Sample('water_dipa_nacl_s11', df, 2, 3, chem_properties=cp, w=get_003_w(0.1462, 0.8066), background=None)
     s12 = Sample('water_dipa_nacl_s12', df, 12, 13, chem_properties=cp, w=get_003_w(0.0611, 2.3315), background=None)
 
-    m1 = Mixture([water1, dipa1, water2, water3, dipa2, dipa_w1, dipa_w1a, dipa_w2, dipa_w2a, dipa_w3, dipa_w4,
-                  five_M, five_M_2, two_M, two_M_2, four_M, four_M_2, nacl_005_1a, nacl_005_1b, nacl_005_2a,
-                  nacl_005_2b,
-                  nacl_005_3a, nacl_005_4a, nacl_005_4b, nacl_005_5a, nacl_005_5b, nacl_005_6a, nacl_005_6b,
-                  s7, s8, s9, s10, s11, s12],
-                 savefile='water_dipa_nacl.nc')
 
-    water_dipa = Mixture([water1, dipa1, water2, water3, dipa2, dipa_w1, dipa_w1a, dipa_w2, dipa_w2a, dipa_w3, dipa_w4],
-                         savefile='water_dipa.nc')
-    water_nacl = Mixture([water1, water2, water3, five_M, five_M_2, two_M, two_M_2, four_M, four_M_2],
-                         savefile='water_nacl.nc')
-    water_dipa_nacl = water_dipa + water_nacl
+    dipa_water = Mixture([], savefile='dipa_water.nc')
 
-    return water_dipa_nacl, water_dipa, water_nacl
+    m1 = Mixture([water1,
+                  # dipa1, water2, water3, dipa2, dipa_w1, dipa_w1a, dipa_w2, dipa_w2a, dipa_w3, dipa_w4,
+                  # five_M, five_M_2, two_M, two_M_2, four_M, four_M_2, nacl_005_1a, nacl_005_1b, nacl_005_2a,
+                  # nacl_005_2b
+                  ])
+    m2 = Mixture([dipa1
+                  # nacl_005_3a, nacl_005_4a, nacl_005_4b, nacl_005_5a, nacl_005_5b, nacl_005_6a, nacl_005_6b,
+                  # s7, s8, s9, s10, s11, s12
+                  ])
+
+    return m1, m2
+
+def main():
+    m1, m2 = import_training_set()
+    m3 = m1 + m2
+    print(m3.da)
+    return
+
+if __name__ == '__main__':
+    main()
