@@ -106,14 +106,17 @@ def identity(x):
     return x
 
 
-def plot_mae(y_test, y_train, y_pred, mae_test, mae_train, wl_window=None):
+def plot_mae(y_test, y_train, y_pred, mae_test, mae_train,
+             savefile=None,
+             wl_window=None,
+             display=False):
     scores = {
         "MedAE on training set": f"{mae_train:.4f}",
         "MedAE on testing set": f"{mae_test:.4f}",
     }
 
     _, ax = plt.subplots(figsize=(5, 5))
-    display = PredictionErrorDisplay.from_predictions(
+    PredictionErrorDisplay.from_predictions(
         y_test, y_pred, kind="actual_vs_predicted", ax=ax, scatter_kwargs={"alpha": 0.5}
     )
     # ax.set_title("Ridge model, small regularization")
@@ -128,6 +131,12 @@ def plot_mae(y_test, y_train, y_pred, mae_test, mae_train, wl_window=None):
         ax.plot([], [], " ", label=f"{name}: {score}")
     ax.legend(loc="upper left")
     plt.tight_layout()
-    plt.show()
-    # _.savefig('mae.pdf')
+
+    if display is True:
+        plt.show()
+
+    if savefile is None:
+        pass
+    else:
+        plt.savefig(savefile + '.png', dpi=400)
     return _, ax

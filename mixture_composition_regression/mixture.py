@@ -68,9 +68,22 @@ class Mixture:
         self.da.to_netcdf(savefile, mode=mode)
         return
 
-    def plot_by(self, idx=0, cmap_name='cividis', savefig=None, alpha=1, logy=False, spect_bounds=None):
+    def plot_by(self, idx=0,
+                cmap_name='cividis',
+                savefig=None,
+                alpha=1,
+                logy=False,
+                spect_bounds=None,
+                xlabel = 'Wavelength [nm]',
+                ylabel = 'Absorption [–]',
+                stylesheet = None
+        ):
+        if stylesheet is None:
+            pass
+        else:
+            plt.style.use(stylesheet)
         fig = plt.figure()
-        gs = GridSpec(1, 1, left=0.15, bottom=0.15, right=0.98, top=0.98)
+        gs = GridSpec(1, 1, left=0.20, bottom=0.20, right=0.95, top=0.95)
         ax = fig.add_subplot(gs[0])
 
 
@@ -83,7 +96,8 @@ class Mixture:
         sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=min(x), vmax=max(x)))
         plt.colorbar(sm, ax=ax)
 
-
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
 
         for s in self.samples:
             c = s.w[idx]

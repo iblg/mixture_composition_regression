@@ -21,6 +21,19 @@ def get_003_w(m_sol, m_dipa):
     return [mwater / mtot, m_dipa / mtot, mnacl / mtot]
 
 
+def get_2023_04_06(m_sol, m_water):
+    w = 0.6539 / (0.6539 + 65.0868)
+    m_nacl = w * m_sol
+    m_dipa = 0
+    m_water = m_water + (1 - w) * m_sol
+    m_tot = m_nacl + m_dipa + m_water
+
+    w_water = m_water / m_tot
+    w_dipa = m_dipa / m_tot
+    w_nacl = m_nacl / m_tot
+    return [w_water, w_dipa, w_nacl]
+
+
 def import_training_set():
     cp = {'name': ['water', 'dipa', 'nacl'],
           'mw': [18.015, 101.19, 58.44],
@@ -111,14 +124,37 @@ def import_training_set():
     s11 = Sample('water_dipa_nacl_s11', df, 2, 3, chem_properties=cp, w=get_003_w(0.1462, 0.8066), background=back)
     s12 = Sample('water_dipa_nacl_s12', df, 12, 13, chem_properties=cp, w=get_003_w(0.0611, 2.3315), background=back)
 
+    # 2023-04-06
+    file = '/Users/ianbillinge/Documents/yiplab/projects/ir/data/1mm_pl/2023-04-06/2023-04-06.csv'
+    df = clean_data(file)
+    back = Sample('background', df, 0, 1, chem_properties=cp, w=[1, 0, 0])
+    a2 = Sample('a2', df, 2, 3, chem_properties=cp, w=get_2023_04_06(3.8376, 2.7831), background=back)
+    irina = Sample('irina', df, 4, 5, chem_properties=cp, w=get_2023_04_06(2.7387, 10.5606), background=back)
+    a3 = Sample('a3', df, 8, 9, chem_properties=cp, w=get_2023_04_06(3.3168, 1.9031), background=back)
+    a4 = Sample('a4', df, 6, 7, chem_properties=cp, w=get_2023_04_06(1., 0.), background=back)
+
+    # 2023-04-10
+    file = '/Users/ianbillinge/Documents/yiplab/projects/ir/data/1mm_pl/2023-04-10/2023-04-10.csv'
+    df = clean_data(file)
+    back = Sample('background', df, 0, 1, chem_properties=cp, w=[1, 0, 0])
+    s11a = Sample('s11a', df, 4, 5, chem_properties=cp, w=[6.9871 / (6.9871 + 0.0068), 0.0068 / (6.9871 + 0.0068), 0], background=back)
+    s12a = Sample('s12a', df, 2, 3, chem_properties=cp, w=[7.2492 / (7.2492 + 0.0179), 0.0179 / (7.2492 + 0.0179), 0], background=back)
+    s13 = Sample('s13', df, 6, 7, chem_properties=cp, w=[6.1994 / (6.1994 + 0.0211), 0.0211 / (6.1994 + 0.0211), 0], background=back)
+    s14 = Sample('s14', df, 8, 9, chem_properties=cp, w=[5.9043 / (5.9043 + 0.0114), 0.0114 / (5.9043 + 0.0114), 0], background=back)
+    s15 = Sample('s15', df, 10, 11, chem_properties=cp, w=[5.0079 / (5.0079 + 0.0098), 0.0098 / (5.0079 + 0.0098), 0], background=back)
+    s16 = Sample('s16', df, 12, 13, chem_properties=cp, w=[(5.4557 + 17.3049) / (5.4557 + 17.3049 + 0.0337), 0.0337 / (5.4557 + 17.3049 + 0.0337), 0], background=back)
+
 
     water_dipa = Mixture([water1, dipa1, water2,
                           water3,
-                          dipa2, dipa_w1, dipa_w1a, dipa_w2, dipa_w2a, dipa_w3, dipa_w4])
+                          dipa2, dipa_w1, dipa_w1a, dipa_w2, dipa_w2a, dipa_w3, dipa_w4,
+                          s11a, s12a, s13, s14, s15, s16
+                        ])
     water_dipa.savefile('water_dipa.nc', mode='w')
 
     water_nacl = Mixture([water1, water2,
-                          water3, five_M, five_M_2, two_M, two_M_2, four_M, four_M_2
+                          water3, five_M, five_M_2, two_M, two_M_2, four_M, four_M_2,
+                          a2, irina, a3, a4
                           ])
     water_nacl.savefile('water_nacl.nc', mode='w')
 
