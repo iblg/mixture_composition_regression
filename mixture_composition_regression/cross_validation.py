@@ -89,8 +89,8 @@ def get_window_list(start, end, nwindows=None, width=None):
 
 def main():
     water_dipa_nacl, water_dipa, water_nacl = import_training_set()
-    # m = water_dipa_nacl
-    m = water_dipa
+    m = water_dipa_nacl
+    # m = water_dipa
     m.plot_by(idx=1, savefig='water_dipa', alpha=1, logy=True, cmap_name='viridis', spect_bounds=[1200, 3000], stylesheet=None  )
 
     lbounds = [1200, 3200]  # set global bounds on wavelength

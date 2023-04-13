@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 from matplotlib import cm
 
+
 class Mixture:
     """
     A container for your test (or test/train) data for a system of interest. Individual samples in this dataset can be
@@ -46,8 +47,9 @@ class Mixture:
         # get attributes
         if attrs is None:
             # attrs = samples[0].attrs
-            attrs = None
+            self.attrs = None
         else:
+            self.attrs = attrs
             pass
 
         da = xr.concat(da_list, dim='name')
@@ -74,10 +76,10 @@ class Mixture:
                 alpha=1,
                 logy=False,
                 spect_bounds=None,
-                xlabel = 'Wavelength [nm]',
-                ylabel = 'Absorption [–]',
-                stylesheet = None
-        ):
+                xlabel='Wavelength [nm]',
+                ylabel='Absorption [–]',
+                stylesheet=None
+                ):
         if stylesheet is None:
             pass
         else:
@@ -85,7 +87,6 @@ class Mixture:
         fig = plt.figure()
         gs = GridSpec(1, 1, left=0.20, bottom=0.20, right=0.95, top=0.95)
         ax = fig.add_subplot(gs[0])
-
 
         cmap = cm.get_cmap(cmap_name)
         # x = []
@@ -120,6 +121,25 @@ class Mixture:
             plt.savefig(savefig + '.png', dpi=400)
 
         return
+
+    def filter(self, *criteria):
+        # check crits
+        m2 = []
+
+        for sample in self.samples:
+            include = True
+            for idx, bds in criteria:
+                if bds[0] <= sample.w[idx] <= bds[1]:
+                    pass
+                else:
+                    include = False
+            if include:
+                print(sample.name)
+                print(sample.w)
+                m2.append(sample)
+        m2 = Mixture(m2)
+
+        return m2
 
 
 def _check_samples(samples):
