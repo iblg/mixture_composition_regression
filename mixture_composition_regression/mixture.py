@@ -122,24 +122,28 @@ class Mixture:
 
         return
 
-    def filter(self, *criteria):
+    def filter(self, criteria):
+
         # check crits
-        m2 = []
+        if isinstance(criteria, dict):
+            pass
+        else:
+            print('One criterion was passed to Mixture.filter() that is not a dict.')
+
+        m = []
 
         for sample in self.samples:
             include = True
-            for chem_name, bds in criteria:
+            for chem_name, bds in criteria.items():
                 if bds[0] <= sample.w[chem_name] <= bds[1]:
                     pass
                 else:
                     include = False
             if include:
-                print(sample.name)
-                print(sample.w)
-                m2.append(sample)
-        m2 = Mixture(m2)
+                m.append(sample)
+        m = Mixture(m)
 
-        return m2
+        return m
 
 
 def _check_samples(samples):

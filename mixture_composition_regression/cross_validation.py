@@ -89,15 +89,16 @@ def get_window_list(start, end, nwindows=None, width=None):
 
 def main():
     water_dipa_nacl, water_dipa, water_nacl = import_training_set()
-    m = water_dipa_nacl
-    # m = water_dipa
+    m = water_dipa_nacl.filter({'nacl': [0, 0.03]})
     m.plot_by(idx=1, savefig='water_dipa', alpha=1, logy=True, cmap_name='viridis', spect_bounds=[1200, 3000], stylesheet=None  )
 
-    lbounds = [1200, 3200]  # set global bounds on wavelength
-    nwindows = 30
+    lbounds = [900, 3200]  # set global bounds on wavelength
+    nwindows = 10
     wl = get_window_list(lbounds[0], lbounds[1], nwindows=nwindows)  # get a list of windows you want to look at
     # best model so far: lbounds 2027, 2050, 10**-3 alpha, Ridge()
+
     sc = 'r2'
+
     ridge = GridSearchCV(
         Ridge(),
         # {'alpha': np.logspace(-10, 10, 11)}
@@ -137,9 +138,9 @@ def main():
     ]
     random_state = 42
     tts_size = 0.25
-    ycol = 0  # water
+    # ycol = 0  # water
     # ycol = 1  # dipa
-    # ycol = 2  # salt
+    ycol = 2  # salt
     viable_models, best_model = cv_on_model_and_wavelength(m, wl, cv_models,
                                                            ycol=ycol,
                                                            tts_test_size=tts_size,
