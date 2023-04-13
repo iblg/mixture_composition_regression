@@ -2,8 +2,12 @@ import sklearn as skl
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import train_test_split
 from sklearn.kernel_ridge import KernelRidge
+from sklearn.svm import SVR
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.gaussian_process.kernels import ExpSineSquared
+
+from sklearn.metrics import mean_squared_error
+# from ib_mpl_stylesheet.ib_mpl_stylesheet import ib_mpl_style
 
 import numpy as np
 from mixture_composition_regression.tests.import_training_set import import_training_set
@@ -12,7 +16,8 @@ from mixture_composition_regression.preprocessor_pipeline import *
 
 # They need to be able to try different models, different params within those models, and different wavelength ranges
 
-def cv_on_model_and_wavelength(m, wl, models, ycol=None, tts_test_size=None, tts_random_state=None, mae_tolerance=0.01):
+def cv_on_model_and_wavelength(m, wl, models, ycol=None, tts_test_size=None, tts_random_state=None, mae_tolerance=0.01,
+                               metric = None):
     """
 
     :param mae_tolerance:
@@ -24,14 +29,17 @@ def cv_on_model_and_wavelength(m, wl, models, ycol=None, tts_test_size=None, tts
     :param models: GridSearchCV objects
     :return:
     """
-    best_mae_train, best_mae_test = 1E10, 1E10
+    if metric is None:
+        metric = median_absolute_error
+    else:
+        pass
+
+    best_metric = 10 ** 10
     viable_models = []
-    first = 0
     for idx, model in enumerate(models):
-        print('\n \n \nModel number {}'.format(idx))
-        print(model.estimator)
+        print('Running analysis on', model.estimator)
         for l_window in wl:
-            l_window[0] -= 1E-5 # this stops the bottom-most interval from being shorter than the others.
+            l_window[0] -= 1E-5  # this stops the bottom-most interval from being shorter than the others.
             y, X = get_Xy(m, lbounds=l_window, ycol=ycol)  # get y, X data
 
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=tts_test_size,
@@ -41,27 +49,17 @@ def cv_on_model_and_wavelength(m, wl, models, ycol=None, tts_test_size=None, tts
 
             # Evaluate the model
             y_pred = model_instance.predict(X_test)
-            mae_train = median_absolute_error(y_train, model_instance.predict(X_train))
-            mae_test = median_absolute_error(y_test, y_pred)
+            train_eval = metric(y_train, model_instance.predict(X_train))
+            test_eval = metric(y_test, y_pred)
 
-            if mae_test < mae_tolerance:
-                viable_models.append([model, l_window])
+            if test_eval < mae_tolerance:
+                viable_models.append([model_instance.best_estimator_, l_window, test_eval])
 
-            if mae_train < best_mae_train:
-                best_mae_train = mae_train
-                best_mae_train_model = (model_instance, l_window, mae_train)
+            if test_eval < best_metric:
+                best_metric = test_eval
+                best_model = [model_instance.best_estimator_, l_window, test_eval]
 
-            if mae_test < best_mae_test:
-                best_mae_test = mae_test
-                best_mae_test_model = (model_instance, l_window, mae_test)
-                print(l_window)
-                print(X[0])
-
-            # print('We\'ve converged on the params for this wavelength window.')
-            # # print('l_window: {}'.format(l_window))
-            # print(model_instance.score(X_test, y_test))
-            # print(model_instance.best_params_)
-    return viable_models, best_mae_test_model, best_mae_train_model
+    return viable_models, best_model
 
 
 def get_window_list(start, end, nwindows=None, width=None):
@@ -90,61 +88,79 @@ def get_window_list(start, end, nwindows=None, width=None):
 
 
 def main():
-    m = import_training_set()  # create a mixture
-    lbounds = [2027, 2050]  # set global bounds on wavelength
-    nwindows = 1
-    wl = get_window_list(lbounds[0], lbounds[1], nwindows=nwindows)  # get a list of windows you want to look at
+    water_dipa_nacl, water_dipa, water_nacl = import_training_set()
+    m = water_dipa_nacl
+    # m = water_dipa
+    m.plot_by(idx=1, savefig='water_dipa', alpha=1, logy=True, cmap_name='viridis', spect_bounds=[1200, 3000], stylesheet=None  )
 
+    lbounds = [1200, 3200]  # set global bounds on wavelength
+    nwindows = 30
+    wl = get_window_list(lbounds[0], lbounds[1], nwindows=nwindows)  # get a list of windows you want to look at
+    # best model so far: lbounds 2027, 2050, 10**-3 alpha, Ridge()
+    sc = 'r2'
     ridge = GridSearchCV(
         Ridge(),
         # {'alpha': np.logspace(-10, 10, 11)}
-        {'alpha': [1E-3]}
+        {'alpha': np.logspace(-5, 5, 11)},
+        scoring=sc,
+        cv=5
     )
 
     kr = GridSearchCV(
         KernelRidge(),
-        param_grid={'kernel': "rbf", "alpha": np.logspace(-5, 5, 11), "gamma": np.logspace(-5, 5, 11)},
+        param_grid={'kernel': ["rbf", 'linear'],
+                    "alpha": np.logspace(-5, 5, 11),
+                    "gamma": np.logspace(-5, 5, 11)},
+        scoring=sc,
     )
-    svr = GridSearchCV(SVR(),
-                       {'kernel': ['linear', 'rbf'],
-                        'gamma': ['scale', 'auto'],
-                        'epsilon': np.logspace(-5, 5, 10)
-                        })
-    rnr = GridSearchCV(KNeighborsRegressor(), {'n_neighbors': 5 + np.arange(10)})
+
+    svr = GridSearchCV(
+        SVR(),
+        {'kernel': ['linear', 'rbf'],
+         'gamma': ['scale', 'auto'],
+         'epsilon': np.logspace(-5, 5, 10)
+         },
+        scoring=sc,
+    )
+
+    knnr = GridSearchCV(
+        KNeighborsRegressor(),
+        {'n_neighbors': 5 + np.arange(10)},
+        scoring=sc
+    )
 
     cv_models = [
         ridge,
         # kr,
-        # svr,
-        # rnr
+        svr,
+        knnr
     ]
     random_state = 42
     tts_size = 0.25
-    ycol = 0
-    viable_models, best_test_model, best_train_model = cv_on_model_and_wavelength(m, wl, cv_models,
-                                                                                  ycol=ycol,
-                                                                                  tts_test_size=tts_size,
-                                                                                  tts_random_state=random_state,
-                                                                                  mae_tolerance=5E-3)
+    ycol = 0  # water
+    # ycol = 1  # dipa
+    # ycol = 2  # salt
+    viable_models, best_model = cv_on_model_and_wavelength(m, wl, cv_models,
+                                                           ycol=ycol,
+                                                           tts_test_size=tts_size,
+                                                           tts_random_state=random_state,
+                                                           mae_tolerance=5E-4)
 
-    # for mod in viable_models:
-    #     print(mod[1])
-    #     print(mod[0].best_params_)
-
-    # print('Best model:')
-    # print(best_test_model[1])
-    # print(best_test_model[0].best_params_)
-    # print(best_test_model[2])
-
-    y, X = get_Xy(m, lbounds=best_test_model[1], ycol=ycol)
+    print('Best model:')
+    print(best_model[1])
+    print(best_model[0])
+    #
+    y, X = get_Xy(m, lbounds=best_model[1], ycol=ycol)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=tts_size,
                                                         random_state=random_state)
-    print(best_test_model[1])
-    print(X[0])
-    y_pred = best_test_model[0].predict(X_test)
-    mae_train = median_absolute_error(y_train, best_test_model[0].predict(X_train))
+
+    y_pred = best_model[0].predict(X_test)
+    mae_train = median_absolute_error(y_train, best_model[0].predict(X_train))
+
     mae_test = median_absolute_error(y_test, y_pred)
-    plot_mae(y_test, y_train, y_pred, mae_test, mae_train)
+    plt.style.use('default')
+    plot_mae(y_test, y_train, y_pred, mae_test, mae_train,
+             wl_window=best_model[1], savefile=None, display=True)
     return
 
 

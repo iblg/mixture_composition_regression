@@ -7,8 +7,6 @@ from sklearn.compose import make_column_transformer
 from sklearn.metrics import PredictionErrorDisplay
 from sklearn.metrics import median_absolute_error
 
-from sklearn.svm import SVR
-from sklearn.linear_model import RidgeCV
 from sklearn.linear_model import Ridge
 
 import numpy as np
@@ -108,21 +106,37 @@ def identity(x):
     return x
 
 
-def plot_mae(y_test, y_train, y_pred, mae_test, mae_train):
+def plot_mae(y_test, y_train, y_pred, mae_test, mae_train,
+             savefile=None,
+             wl_window=None,
+             display=False):
     scores = {
         "MedAE on training set": f"{mae_train:.4f}",
         "MedAE on testing set": f"{mae_test:.4f}",
     }
 
     _, ax = plt.subplots(figsize=(5, 5))
-    display = PredictionErrorDisplay.from_predictions(
+    PredictionErrorDisplay.from_predictions(
         y_test, y_pred, kind="actual_vs_predicted", ax=ax, scatter_kwargs={"alpha": 0.5}
     )
     # ax.set_title("Ridge model, small regularization")
+    if wl_window is None:
+        pass
+    else:
+        ax.text(0.95, 0.1, r'$\lambda_{\mathrm{min}} =$' + '{:3.1f}'.format(wl_window[0]), transform=ax.transAxes,
+                ha='right', va='bottom')
+        ax.text(0.95, 0.05, r'$\lambda_{\mathrm{max}} =$' + '{:3.1f}'.format(wl_window[1]), transform=ax.transAxes,
+                ha='right', va='bottom')
     for name, score in scores.items():
         ax.plot([], [], " ", label=f"{name}: {score}")
     ax.legend(loc="upper left")
     plt.tight_layout()
-    plt.show()
-    # _.savefig('mae.pdf')
+
+    if display is True:
+        plt.show()
+
+    if savefile is None:
+        pass
+    else:
+        plt.savefig(savefile + '.png', dpi=400)
     return _, ax
