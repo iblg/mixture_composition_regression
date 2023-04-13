@@ -68,6 +68,7 @@ class Sample:
         self.check_chem_properties(chem_properties)  # ensure that w and chem_properties have same keys
         self.check_w(w, chem_properties)  # check whether the weights sum to 1.
 
+        w = pd.Series(w, index=chem_properties['name'])
         self.w = w
 
         dimensions = ['name', 'l']
@@ -139,26 +140,6 @@ class Sample:
         to_file.to_csv(self.savefile + ".csv", index=False)
         return
 
-    # def int_peak(self, low, high, log):
-    #     """
-    #     Integrates the peak defined by low and high wavelengths.
-    #     """
-    #     y = self.a.where((self.l < high) & (self.l > low)).dropna()
-    #     x = self.l.where((self.l < high) & (self.l > low)).dropna()
-    #
-    #     if log == True:
-    #         y = np.log10(y)
-    #
-    #     y0 = y.iloc[-1]
-    #     y1 = y.iloc[0]
-    #     x0 = x.iloc[-1]
-    #     x1 = x.iloc[0]
-    #     baseline = y0 + (y1 - y0) / (x1 - x0) * (x - x0)  # x0 is lowest wavelength
-    #
-    #     y = y - baseline
-    #     area = np.trapz(y)
-    #
-    #     return area
 
     def check_w(self, w, chem_properties):
 
@@ -209,34 +190,15 @@ class Sample:
         # return
 
 
-#
-# def int_peak(samples, low, high):
-#     areas = []
-#     for sample in samples:
-#         y = sample.a.where((sample.l < high) & (sample.l > low)).dropna()
-#         x = sample.l.where((sample.l < high) & (sample.l > low)).dropna()
-#
-#         y0 = y.iloc[-1]
-#         y1 = y.iloc[0]
-#         x0 = x.iloc[-1]
-#         x1 = x.iloc[0]
-#         baseline = y0 + (y1 - y0) / (x1 - x0) * (x - x0)  # x0 is lowest wavelength
-#
-#         y = y - baseline
-#         area = np.trapz(y)
-#         areas.append(area)
-#     return areas
-
-
 def main():
-    file = '/Users/ianbillinge/Documents/yiplab/programming/uvvisnir/1mm_pl/2023-03-22/2023-03-22.csv'
+    file = '/Users/ianbillinge/Documents/yiplab/projects/ir/data/1mm_pl/2023-03-03/2023-03-03.csv'
     df = clean_data(file)
     # print(df)
-    cp = {'name': ['nacl', 'water'],
-          'mw': [58.44, 18.015],
-          'nu': [2, 1]}
-    s1 = Sample('s1', df, 0, 1, chem_properties=cp, w=[0.1, 0.9])
-    print(s1.da)
+    cp = {'name': ['water', 'dipa', 'nacl'],
+          'mw': [18.015, 101.19, 58.44],
+          'nu': [1, 1, 2]}
+    s1 = Sample('water', df, 0, 1, chem_properties=cp, w=[1, 0, 0])
+    print(s1.w)
 
     return
 

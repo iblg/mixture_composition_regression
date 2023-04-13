@@ -128,8 +128,8 @@ class Mixture:
 
         for sample in self.samples:
             include = True
-            for idx, bds in criteria:
-                if bds[0] <= sample.w[idx] <= bds[1]:
+            for chem_name, bds in criteria:
+                if bds[0] <= sample.w[chem_name] <= bds[1]:
                     pass
                 else:
                     include = False
