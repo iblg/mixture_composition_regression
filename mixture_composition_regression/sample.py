@@ -140,7 +140,6 @@ class Sample:
         to_file.to_csv(self.savefile + ".csv", index=False)
         return
 
-
     def check_w(self, w, chem_properties):
 
         # Check whether there are the same number of weights as there are chemicals.

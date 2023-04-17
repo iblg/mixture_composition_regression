@@ -1,68 +1,73 @@
-import sklearn as skl
+import sklearn
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import train_test_split
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.svm import SVR
 from sklearn.neighbors import KNeighborsRegressor
+from sklearn.neural_network import MLPRegressor
 from sklearn.gaussian_process.kernels import ExpSineSquared
 
 from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_absolute_percentage_error
 # from ib_mpl_stylesheet.ib_mpl_stylesheet import ib_mpl_style
 
 import numpy as np
+
+import mixture_composition_regression.mixture
 from mixture_composition_regression.tests.import_training_set import import_training_set
 from mixture_composition_regression.preprocessor_pipeline import *
 
 
 # They need to be able to try different models, different params within those models, and different wavelength ranges
 
-def cv_on_model_and_wavelength(m, wl, models, ycol=None, tts_test_size=None, tts_random_state=None, mae_tolerance=0.01,
-                               metric = None):
-    """
-
-    :param mae_tolerance:
-    :param tts_random_state:
-    :param tts_test_size:
-    :param ycol:
-    :param m: Mixture
-    :param wl: wavelength list
-    :param models: GridSearchCV objects
-    :return:
-    """
+def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture,
+                               nwindows: list,
+                               models: list,
+                               ycol: int = None,
+                               tts_test_size: float = None,
+                               tts_random_state: int = None,
+                               tolerance: float = 0.01,
+                               metric: sklearn.metrics = None):
     if metric is None:
-        metric = median_absolute_error
+        metric = mean_squared_error
     else:
         pass
 
     best_metric = 10 ** 10
+
     viable_models = []
-    for idx, model in enumerate(models):
-        print('Running analysis on', model.estimator)
-        for l_window in wl:
-            l_window[0] -= 1E-5  # this stops the bottom-most interval from being shorter than the others.
-            y, X = get_Xy(m, lbounds=l_window, ycol=ycol)  # get y, X data
+    for n in nwindows:
+        print('Running analysis splitting interval into {} windows.'.format(n))
+        wl = get_window_list(min(m.samples[0].l), max(m.samples[0].l), nwindows=n)
 
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=tts_test_size,
-                                                                random_state=tts_random_state)
-            model_instance = model.fit(X_train,
-                                       y_train)  # model instance is the model with optimized params by gridsearch CV
+        for idx, model in enumerate(models):
+            print('Running analysis on', model.estimator)
+            for l_window in wl:
+                l_window[0] -= 1E-5  # this stops the bottom-most interval from being shorter than the others.
+                y, X = get_Xy(m, lbounds=l_window, ycol=ycol)  # get y, X data
 
-            # Evaluate the model
-            y_pred = model_instance.predict(X_test)
-            train_eval = metric(y_train, model_instance.predict(X_train))
-            test_eval = metric(y_test, y_pred)
+                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=tts_test_size,
+                                                                    random_state=tts_random_state)
+                model_instance = model.fit(X_train,
+                                           y_train)  # model instance is the model with optimized params by gridsearch CV
 
-            if test_eval < mae_tolerance:
-                viable_models.append([model_instance.best_estimator_, l_window, test_eval])
+                # Evaluate the model
+                y_pred = model_instance.predict(X_test)
+                train_eval = metric(y_train, model_instance.predict(X_train))
+                test_eval = metric(y_test, y_pred)
 
-            if test_eval < best_metric:
-                best_metric = test_eval
-                best_model = [model_instance.best_estimator_, l_window, test_eval]
+                if test_eval < tolerance:
+                    viable_models.append([model_instance.best_estimator_, l_window, test_eval])
+
+                if test_eval < best_metric:
+                    best_metric = test_eval
+                    best_model = [model_instance.best_estimator_, l_window, test_eval]
 
     return viable_models, best_model
 
 
-def get_window_list(start, end, nwindows=None, width=None):
+def get_window_list(start: float, end: float, nwindows: list = None, width: float = None):
     if (nwindows is None) and (width is None):
         print('nwindows or width must be specified.')
         print('A default of 1 window has been applied')
@@ -89,15 +94,13 @@ def get_window_list(start, end, nwindows=None, width=None):
 
 def main():
     water_dipa_nacl, water_dipa, water_nacl = import_training_set()
-    m = water_dipa_nacl.filter({'nacl': [0, 0.03]})
-    m.plot_by(idx=1, savefig='water_dipa', alpha=1, logy=True, cmap_name='viridis', spect_bounds=[1200, 3000], stylesheet=None  )
-
     lbounds = [900, 3200]  # set global bounds on wavelength
-    nwindows = 10
-    wl = get_window_list(lbounds[0], lbounds[1], nwindows=nwindows)  # get a list of windows you want to look at
+    m = water_dipa_nacl.filter({'nacl': [10 ** -5, 1], 'dipa': [10 ** -5, 1]})
+    m.plot_by(idx=2, savefig='plotby', alpha=1, logy=True, cmap_name='viridis', spect_bounds=lbounds, stylesheet=None)
+    nwindows = [1, 10, 30]
+    # wl = get_window_list(lbounds[0], lbounds[1], nwindows=nwindows)  # get a list of windows you want to look at
     # best model so far: lbounds 2027, 2050, 10**-3 alpha, Ridge()
-
-    sc = 'r2'
+    sc = 'neg_mean_squared_error'
 
     ridge = GridSearchCV(
         Ridge(),
@@ -130,22 +133,32 @@ def main():
         scoring=sc
     )
 
+    mlp = GridSearchCV(
+        MLPRegressor(solver='lbfgs', max_iter=400),
+        {'hidden_layer_sizes': [10, 50, 100]},
+        scoring=sc
+    )
+
     cv_models = [
         ridge,
-        # kr,
+        kr,
         svr,
-        knnr
+        knnr,
+        mlp,
     ]
     random_state = 42
     tts_size = 0.25
     # ycol = 0  # water
     # ycol = 1  # dipa
     ycol = 2  # salt
-    viable_models, best_model = cv_on_model_and_wavelength(m, wl, cv_models,
-                                                           ycol=ycol,
-                                                           tts_test_size=tts_size,
-                                                           tts_random_state=random_state,
-                                                           mae_tolerance=5E-4)
+    # metric = mean_absolute_percentage_error
+    # metric_label = 'Mean abs fractional err'
+    #
+    metric = mean_absolute_error
+    metric_label = 'MAE'
+    viable_models, best_model = cv_on_model_and_wavelength(m, nwindows, cv_models, ycol=ycol, tts_test_size=tts_size,
+                                                           tts_random_state=random_state, tolerance=5E-4,
+                                                           metric=metric)
 
     print('Best model:')
     print(best_model[1])
@@ -156,12 +169,11 @@ def main():
                                                         random_state=random_state)
 
     y_pred = best_model[0].predict(X_test)
-    mae_train = median_absolute_error(y_train, best_model[0].predict(X_train))
-
-    mae_test = median_absolute_error(y_test, y_pred)
+    metric_train = metric(y_train, best_model[0].predict(X_train))
+    metric_test = metric(y_test, y_pred)
     plt.style.use('default')
-    plot_mae(y_test, y_train, y_pred, mae_test, mae_train,
-             wl_window=best_model[1], savefile=None, display=True)
+    plot_metric(y_test, y_train, y_pred, metric_label, metric_test, metric_train,
+                savefile='nacl' + metric_label, wl_window=best_model[1], display=False)
     return
 
 
