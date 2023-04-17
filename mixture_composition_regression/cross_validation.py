@@ -28,7 +28,9 @@ def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture
                                tts_test_size: float = None,
                                tts_random_state: int = None,
                                tolerance: float = 0.01,
-                               metric: sklearn.metrics = None):
+                               metric: sklearn.metrics = None,
+                               test_data = None,
+                               train_data = None):
     if metric is None:
         metric = mean_squared_error
     else:
@@ -47,8 +49,13 @@ def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture
                 l_window[0] -= 1E-5  # this stops the bottom-most interval from being shorter than the others.
                 y, X = get_Xy(m, lbounds=l_window, ycol=ycol)  # get y, X data
 
-                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=tts_test_size,
+                if (test_data is None) and (train_data is None):
+                    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=tts_test_size,
                                                                     random_state=tts_random_state)
+                elif (test_data is None) and (train_data is not None):
+                    print('Test data and train data should either both be None or not provided.')
+                elif (test_data is not None) and (train_data is None):
+
                 model_instance = model.fit(X_train,
                                            y_train)  # model instance is the model with optimized params by gridsearch CV
 
