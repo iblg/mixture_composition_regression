@@ -106,13 +106,13 @@ def identity(x):
     return x
 
 
-def plot_mae(y_test, y_train, y_pred, mae_test, mae_train,
+def plot_metric(y_test, y_train, y_pred, metric_label, metric_test, metric_train,
              savefile=None,
              wl_window=None,
              display=False):
     scores = {
-        "MedAE on training set": f"{mae_train:.4f}",
-        "MedAE on testing set": f"{mae_test:.4f}",
+        '{} on training set'.format(metric_label): '{:.4f}'.format(metric_train),
+        '{} on testing set'.format(metric_label): '{:.4f}'.format(metric_test),
     }
 
     _, ax = plt.subplots(figsize=(5, 5))
