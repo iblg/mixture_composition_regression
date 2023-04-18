@@ -62,7 +62,8 @@ class Mixture:
         _check_chem_properties(self, other)
         self.da = xr.concat([self.da, other.da], dim='name')
         [self.samples.append(s) for s in other.samples]
-        return self
+        mix = Mixture(self.samples, attrs=self.attrs)
+        return mix
 
     def savefile(self, savefile, mode='w'):
         _check_savefile_mode(mode)
@@ -141,7 +142,7 @@ class Mixture:
                     include = False
             if include:
                 m.append(sample)
-        m = Mixture(m)
+        m = Mixture(m, attrs=self.attrs)
 
         return m
 
@@ -154,7 +155,7 @@ def _check_samples(samples):
         else:
             print('Mixture __init__ got passed something that isn\'t a sample!')
 
-    # check for duplicate samples. If duplicates, then add a trivial amount onto each coord.
+    # check for duplicate samples.
     for s in range(len(samples)):
         for s2 in range(s + 1, len(samples)):
             if samples[s].name == samples[s2].name:
