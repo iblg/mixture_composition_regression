@@ -29,8 +29,8 @@ def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture
                                tts_random_state: int = None,
                                tolerance: float = 0.01,
                                metric: sklearn.metrics = None,
-                               test_data = None,
-                               train_data = None):
+                               test_data: mixture_composition_regression.mixture.Mixture = None):
+
     if metric is None:
         metric = mean_squared_error
     else:
@@ -45,21 +45,30 @@ def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture
 
         for idx, model in enumerate(models):
             print('Running analysis on', model.estimator)
+
             for l_window in wl:
                 l_window[0] -= 1E-5  # this stops the bottom-most interval from being shorter than the others.
-                y, X = get_Xy(m, lbounds=l_window, ycol=ycol)  # get y, X data
 
-                if (test_data is None) and (train_data is None):
+                if test_data is None:
+                    y, X = get_Xy(m, lbounds=l_window, ycol=ycol)  # get y, X data
                     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=tts_test_size,
                                                                     random_state=tts_random_state)
-                elif (test_data is None) and (train_data is not None):
-                    print('Test data and train data should either both be None or not provided.')
-                elif (test_data is not None) and (train_data is None):
+                else:
+                    print('Test data was provided.')
+                    y_train, X_train = get_Xy(m, lbounds=l_window, ycol=ycol)  # get y, X data
+                    print('y_train:')
+                    print(y_train)
+                    print('X_train:')
+                    print(X_train)
+
+                    y_test, X_test = get_Xy(test_data, lbounds=l_window, ycol=ycol)  # get y, X data
 
                 model_instance = model.fit(X_train,
                                            y_train)  # model instance is the model with optimized params by gridsearch CV
 
                 # Evaluate the model
+                print(len(X_test))
+                print(len(X_train))
                 y_pred = model_instance.predict(X_test)
                 train_eval = metric(y_train, model_instance.predict(X_train))
                 test_eval = metric(y_test, y_pred)
@@ -101,10 +110,17 @@ def get_window_list(start: float, end: float, nwindows: list = None, width: floa
 
 def main():
     water_dipa_nacl, water_dipa, water_nacl = import_training_set()
+
     lbounds = [900, 3200]  # set global bounds on wavelength
-    m = water_dipa_nacl.filter({'nacl': [10 ** -5, 1], 'dipa': [10 ** -5, 1]})
-    m.plot_by(idx=2, savefig='plotby', alpha=1, logy=True, cmap_name='viridis', spect_bounds=lbounds, stylesheet=None)
-    nwindows = [1, 10, 30]
+    mix_test = water_dipa_nacl.filter({'nacl': [10 ** -5, 1], 'dipa': [10 ** -5, 1]})
+    # m = water_dipa_nacl.filter({'nacl': [10 ** -5, 1], 'dipa': [10 ** -5, 1]})
+    #
+    # mix_train = water_dipa + water_nacl
+    # print(mix_train.da)
+    # print(mix_train.da.coords['name'])
+    # print(mix_train.da)
+    # m.plot_by(idx=2, savefig='plotby', alpha=1, logy=True, cmap_name='viridis', spect_bounds=lbounds, stylesheet=None)
+    nwindows = [10]
     # wl = get_window_list(lbounds[0], lbounds[1], nwindows=nwindows)  # get a list of windows you want to look at
     # best model so far: lbounds 2027, 2050, 10**-3 alpha, Ridge()
     sc = 'neg_mean_squared_error'
@@ -148,10 +164,10 @@ def main():
 
     cv_models = [
         ridge,
-        kr,
-        svr,
-        knnr,
-        mlp,
+        # kr,
+        # svr,
+        # knnr,
+        # mlp,
     ]
     random_state = 42
     tts_size = 0.25
@@ -163,24 +179,26 @@ def main():
     #
     metric = mean_absolute_error
     metric_label = 'MAE'
-    viable_models, best_model = cv_on_model_and_wavelength(m, nwindows, cv_models, ycol=ycol, tts_test_size=tts_size,
-                                                           tts_random_state=random_state, tolerance=5E-4,
-                                                           metric=metric)
+    # viable_models, best_model = cv_on_model_and_wavelength(mix_train, nwindows, cv_models, ycol=ycol, tts_test_size=tts_size,
+    #                                                        tts_random_state=random_state, tolerance=5E-4,
+    #                                                        metric=metric,
+    #                                                        # test_data=mix_test
+    #                                                        )
 
-    print('Best model:')
-    print(best_model[1])
-    print(best_model[0])
+    # print('Best model:')
+    # print(best_model[1])
+    # print(best_model[0])
     #
-    y, X = get_Xy(m, lbounds=best_model[1], ycol=ycol)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=tts_size,
-                                                        random_state=random_state)
-
-    y_pred = best_model[0].predict(X_test)
-    metric_train = metric(y_train, best_model[0].predict(X_train))
-    metric_test = metric(y_test, y_pred)
-    plt.style.use('default')
-    plot_metric(y_test, y_train, y_pred, metric_label, metric_test, metric_train,
-                savefile='nacl' + metric_label, wl_window=best_model[1], display=False)
+    # y, X = get_Xy(m, lbounds=best_model[1], ycol=ycol)
+    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=tts_size,
+    #                                                     random_state=random_state)
+    #
+    # y_pred = best_model[0].predict(X_test)
+    # metric_train = metric(y_train, best_model[0].predict(X_train))
+    # metric_test = metric(y_test, y_pred)
+    # plt.style.use('default')
+    # plot_metric(y_test, y_train, y_pred, metric_label, metric_test, metric_train,
+    #             savefile='nacl' + metric_label, wl_window=best_model[1], display=False)
     return
 
 

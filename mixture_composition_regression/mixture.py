@@ -6,6 +6,7 @@ from mixture_composition_regression.sample import Sample
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 from matplotlib import cm
+from itertools import count
 
 
 class Mixture:
@@ -24,7 +25,8 @@ class Mixture:
 
     def __init__(self,
                  samples,
-                 attrs=None):
+                 attrs=None,
+                 name=None):
         """
         Create a Mixture object.
 
@@ -36,9 +38,10 @@ class Mixture:
 
         savefile_mode :
         """
+        self.name = name
         coordinates = [i for i in samples[0].da.coords][1:]  # get list of coordinates except for l.
-
-        _check_samples(samples)  # check the samples for uniqueness etc.
+        print('Checking samples in mixture {}'.format(self.name))
+        samples = _check_samples(samples)  # check the samples for uniqueness etc.
 
         da_list = []
         for s in samples:
@@ -62,7 +65,12 @@ class Mixture:
         _check_chem_properties(self, other)
         self.da = xr.concat([self.da, other.da], dim='name')
         [self.samples.append(s) for s in other.samples]
-        return self
+        mix = Mixture(self.samples, attrs=self.attrs)
+        return mix
+
+    def set_name(self, new_name):
+        new_mix = Mixture(self.samples, attrs=self.attrs, name=new_name)
+        return new_mix
 
     def savefile(self, savefile, mode='w'):
         _check_savefile_mode(mode)
@@ -141,7 +149,7 @@ class Mixture:
                     include = False
             if include:
                 m.append(sample)
-        m = Mixture(m)
+        m = Mixture(m, attrs=self.attrs)
 
         return m
 
@@ -154,12 +162,27 @@ def _check_samples(samples):
         else:
             print('Mixture __init__ got passed something that isn\'t a sample!')
 
-    # check for duplicate samples. If duplicates, then add a trivial amount onto each coord.
-    for s in range(len(samples)):
-        for s2 in range(s + 1, len(samples)):
-            if samples[s].name == samples[s2].name:
-                print('Two samples have duplicate names! {} and {}.'.format(samples[s].name, samples[s2].name))
-    return
+        # check for duplicate samples.
+        # samples_to_delete = []
+        # samps_to_pass = []
+        # for i in range(len(samples)):
+        #     for j in range(i + 1, len(samples)):
+        #         if samples[i].name == samples[j].name:
+        #             print('Two samples have duplicate names! {} and {}.'.format(samples[i].name, samples[j].name))
+        #             samples_to_delete.append(j)
+        #         else:
+        #             samps_to_pass.append(samples[j])
+
+        # initialize a null list
+        unique_samples = []
+        # traverse for all elements
+        for s in samples:
+            if s not in unique_samples:
+                unique_samples.append(s)
+            else:
+                print('Sample {} has a duplicate!'.format(s.name))
+
+        return unique_samples
 
 
 def _check_savefile_mode(savefile_mode):

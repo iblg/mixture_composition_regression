@@ -149,20 +149,27 @@ def import_training_set():
                           water3,
                           dipa2, dipa_w1, dipa_w1a, dipa_w2, dipa_w2a, dipa_w3, dipa_w4,
                           s11a, s12a, s13, s14, s15, s16
-                        ])
+                        ],
+                         name='water_dipa')
     water_dipa.savefile('water_dipa.nc', mode='w')
 
     water_nacl = Mixture([water1, water2,
                           water3, five_M, five_M_2, two_M, two_M_2, four_M, four_M_2,
                           a2, irina, a3, a4
-                          ])
+                          ],
+                         name='water_nacl')
     water_nacl.savefile('water_nacl.nc', mode='w')
 
-    water_dipa_nacl = water_dipa + water_nacl + Mixture([nacl_005_1a, nacl_005_1b, nacl_005_2a,
+    all_3 = Mixture([nacl_005_1a, nacl_005_1b, nacl_005_2a,
                                                          nacl_005_2b,
                                                          nacl_005_3a, nacl_005_4a, nacl_005_4b, nacl_005_5a,
                                                          nacl_005_5b, nacl_005_6a, nacl_005_6b,
-                                                         s7, s8, s9, s10, s11, s12])
+                                                         s7, s8, s9, s10, s11, s12],
+                                                        name = 'all_three')
+    all_3.savefile('all_3.nc', mode='w')
+
+    water_dipa_nacl = water_dipa + water_nacl + all_3
+    water_dipa_nacl = water_dipa_nacl.set_name('water_dipa_nacl')
     water_dipa_nacl.savefile('water_dipa_nacl.nc', mode='w')
 
     return water_dipa_nacl, water_dipa, water_nacl
