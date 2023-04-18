@@ -147,6 +147,13 @@ class Mixture:
 
 
 def _check_samples(samples):
+    """
+    Checks whether all items in a list of samples are Sample objects.
+    Then removes all duplicate Samples.
+    :param samples: a list of Sample objects.
+    samples should be a mixture_composition_regression.mixture.Mixture.samples
+    :return:
+    """
     # check that all are samples
     for s in samples:
         if isinstance(s, mixture_composition_regression.sample.Sample):
@@ -163,6 +170,11 @@ def _check_samples(samples):
 
 
 def _check_savefile_mode(savefile_mode):
+    """
+    This ensures that savefile_mode is being passed an appropriate mode (either to write or append).
+    :param savefile_mode: str. Should be 'w' for write or 'a' for append.
+    :return:
+    """
     if savefile_mode == 'w':
         pass
     elif savefile_mode == 'a':
@@ -172,7 +184,15 @@ def _check_savefile_mode(savefile_mode):
     return
 
 
-def _check_chem_properties(first, second):
+def _check_chem_properties(first: Mixture, second: Mixture):
+    """
+    This function checks that the chemical properties of two mixtures are identical when they are being added.
+    :param first: mixture_composition_regression.mixture.Mixture
+    The first mixture being added.
+    :param second: mixture_composition_regression.mixture.Mixture
+    The second mixture being added.
+    :return:
+    """
     if first.chem_properties == second.chem_properties:
         pass
     else:
