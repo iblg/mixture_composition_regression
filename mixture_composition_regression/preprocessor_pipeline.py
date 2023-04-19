@@ -68,8 +68,8 @@ def get_Xy(m, lbounds, ycol=None):
     return y, X
 
 
-def get_preprocessor():
-    categorical_columns = []
+def get_preprocessor(cat_columns = []):
+    categorical_columns = cat_columns
     preprocessor = make_column_transformer(
         (OneHotEncoder(drop="if_binary"), categorical_columns),
         remainder="passthrough",

@@ -15,6 +15,8 @@ import numpy as np
 from mixture_composition_regression.tests.import_training_set import import_training_set
 from mixture_composition_regression.cross_validation import cv_on_model_and_wavelength
 
+from diagnostic_plots import plot_learning_curve, plot_validation_curve
+
 
 def main():
     water_dipa_nacl, water_dipa, water_nacl = import_training_set()
@@ -22,7 +24,7 @@ def main():
     lbounds = [800, 3200]  # set global bounds on wavelength
 
     mix_test = water_dipa_nacl.filter({'nacl': [10 ** -5, 1], 'dipa': [10 ** -5, 1]})
-    nwindows = [1]
+    nwindows = [1, 10]
     sc = 'neg_mean_absolute_error'
     random_state = 42
     tts_size = 0.25
@@ -77,10 +79,10 @@ def main():
         # mlp,
     ]
 
-    viable_models, best_model = cv_on_model_and_wavelength(
-        mix_train,
+    viable_models, best_model, y, X = cv_on_model_and_wavelength(
+        water_dipa_nacl,
         nwindows, cv_models, ycol=ycol,
-        test_data=mix_test,
+        # test_data=mix_test,
         tts_test_size=tts_size,
         tts_random_state=random_state,
         tolerance=5E-4,
@@ -90,21 +92,10 @@ def main():
         plot_comparison=True,
         plot_comparison_savefile='./plots/axes_train'
     )
-    #
 
-    # viable_models, best_model = cv_on_model_and_wavelength(water_dipa_nacl,
-    #                                                        nwindows,
-    #                                                        cv_models,
-    #                                                        ycol=ycol,
-    #                                                        tts_test_size=tts_size,
-    #                                                        tts_random_state=random_state,
-    #                                                        tolerance=5E-4,
-    #                                                        metric=metric,
-    #                                                        metric_label=metric_label,
-    #                                                        l_bounds=lbounds,
-    #                                                        plot_comparison=True,
-    #                                                        plot_comparison_savefile='./plots/normal_tts'
-    #                                                        )
+    model = best_model[0]
+    plot_learning_curve(model, y, X, scoring='neg_mean_squared_error')
+    plot_validation_curve(model, y, X, {'alpha': np.logspace(-7, 0, 36)}, log_x=True, scoring='neg_mean_squared_error')
 
     return
 

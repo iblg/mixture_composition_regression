@@ -93,7 +93,9 @@ def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture
 
         plot_metric(y_test, y_train, y_pred, metric_label, metric_test, metric_train,
                     savefile=plot_comparison_savefile + metric_label, wl_window=best_model[1], display=True)
-    return viable_models, best_model
+
+    best_y, best_X = get_Xy(m, lbounds=best_model[1], ycol=ycol)
+    return viable_models, best_model, best_y, best_X
 
 
 def get_window_list(start: float, end: float, nwindows: list = None, width: float = None):
