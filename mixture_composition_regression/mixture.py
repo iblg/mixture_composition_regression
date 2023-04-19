@@ -26,7 +26,8 @@ class Mixture:
     def __init__(self,
                  samples,
                  attrs=None,
-                 name=None):
+                 name=None,
+                 sort_da_by_l=True):
         """
         Create a Mixture object.
 
@@ -56,14 +57,18 @@ class Mixture:
             pass
 
         da = xr.concat(da_list, dim='name')
-        self.da = da
+        if sort_da_by_l:
+            self.da = da.sortby(['l'])
+        else:
+            self.da = da
         self.chem_properties = samples[0].chem_properties
         self.samples = samples
         return
 
     def __add__(self, other):
         _check_chem_properties(self, other)
-        self.da = xr.concat([self.da, other.da], dim='name')
+        # self.da = xr.concat([self.da, other.da], dim='name')
+        # self.da = self.da.sortby(['l'], ascending=True)
         [self.samples.append(s) for s in other.samples]
         mix = Mixture(self.samples, attrs=self.attrs)
         return mix

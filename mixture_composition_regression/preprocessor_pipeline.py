@@ -29,6 +29,7 @@ def get_Xy(m, lbounds, ycol=None):
 
     da = m.da
 
+
     bds = (da.l.values > lbounds[0]) & (da.l.values < lbounds[1])
     da = da.where(bds).dropna(dim='l')
 

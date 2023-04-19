@@ -53,7 +53,7 @@ def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture
             print('Running analysis on', model.estimator)
 
             for l_window in wl:
-                l_window[0] -= 1E-5  # this stops the bottom-most interval from being shorter than the others.
+                # l_window[0] -= 1E-5  # this stops the bottom-most interval from being shorter than the others.
 
                 if test_data is None:
                     y, X = get_Xy(m, lbounds=l_window, ycol=ycol)  # get y, X data
@@ -61,8 +61,8 @@ def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture
                                                                     random_state=tts_random_state)
                 else:
                     y_train, X_train = get_Xy(m, lbounds=l_window, ycol=ycol)  # get y, X data
+                    y_test, X_test = get_Xy(test_data, lbounds=l_window, ycol=ycol)
 
-                    y_test, X_test = get_Xy(test_data, lbounds=l_window, ycol=ycol)  # get y, X data
 
                 model_instance = model.fit(X_train,
                                            y_train)  # model instance is the model with optimized params by gridsearch CV
@@ -112,28 +112,26 @@ def main():
     water_dipa_nacl, water_dipa, water_nacl = import_training_set()
 
     lbounds = [800, 3200]  # set global bounds on wavelength
+
     mix_test = water_dipa_nacl.filter({'nacl': [10 ** -5, 1], 'dipa': [10 ** -5, 1]})
-    nwindows = [10]
+    nwindows = [100]
     sc = 'neg_mean_squared_error'
     random_state = 42
     tts_size = 0.25
-    # ycol = 0  # water
+    ycol = 0  # water
     # ycol = 1  # dipa
-    ycol = 2  # salt
+    # ycol = 2  # salt
     # metric = mean_absolute_percentage_error
     # metric_label = 'Mean abs fractional err'
     metric = mean_absolute_error
     metric_label = 'MAE'
 
-    # m = water_dipa_nacl.filter({'nacl': [10 ** -5, 1], 'dipa': [10 ** -5, 1]})
-    #
     mix_train = water_dipa + water_nacl
-    print(mix_train.da.coords['name'])
 
     # m.plot_by(idx=2, savefig='plotby', alpha=1, logy=True, cmap_name='viridis', spect_bounds=lbounds, stylesheet=None)
 
     ridge = GridSearchCV(
-        Ridge(), {'alpha': np.logspace(-5, 5, 11)}, scoring=sc, cv=5
+        Ridge(), {'alpha': np.logspace(-7, 7, 11)}, scoring=sc, cv=5
     )
 
     kr = GridSearchCV(
@@ -184,9 +182,16 @@ def main():
     print(best_model[1])
     print(best_model[0])
 
-    y, X = get_Xy(mix_train, lbounds=best_model[1], ycol=ycol)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=tts_size,
-                                                        random_state=random_state)
+    # FOR IF YOU DON'T SUPPLY TEST_DATA
+    # y, X = get_Xy(mix_train, lbounds=best_model[1], ycol=ycol)
+    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=tts_size,
+    #                                                     random_state=random_state)
+
+    # FOR IF YOU DO SUPPLY TEST_DATA
+    y_train, X_train = get_Xy(mix_train, lbounds=best_model[1], ycol=ycol)
+    y_test, X_test = get_Xy(mix_test, lbounds=best_model[1], ycol=ycol)
+    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=tts_size,
+    #                                                     random_state=random_state)
 
     y_pred = best_model[0].predict(X_test)
     metric_train = metric(y_train, best_model[0].predict(X_train))
