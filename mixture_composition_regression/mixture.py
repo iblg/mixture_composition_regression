@@ -169,27 +169,16 @@ def _check_samples(samples):
         else:
             print('Mixture __init__ got passed something that isn\'t a sample!')
 
-        # check for duplicate samples.
-        # samples_to_delete = []
-        # samps_to_pass = []
-        # for i in range(len(samples)):
-        #     for j in range(i + 1, len(samples)):
-        #         if samples[i].name == samples[j].name:
-        #             print('Two samples have duplicate names! {} and {}.'.format(samples[i].name, samples[j].name))
-        #             samples_to_delete.append(j)
-        #         else:
-        #             samps_to_pass.append(samples[j])
+    # initialize a null list
+    unique_samples = []
+    # traverse for all elements
+    for s in samples:
+        if s not in unique_samples:
+            unique_samples.append(s)
+        else:
+            print('Sample {} has a duplicate!'.format(s.name))
 
-        # initialize a null list
-        unique_samples = []
-        # traverse for all elements
-        for s in samples:
-            if s not in unique_samples:
-                unique_samples.append(s)
-            else:
-                print('Sample {} has a duplicate!'.format(s.name))
-
-        return unique_samples
+    return unique_samples
 
 
 def _check_savefile_mode(savefile_mode):
@@ -219,5 +208,6 @@ def _check_chem_properties(first: Mixture, second: Mixture):
     if first.chem_properties == second.chem_properties:
         pass
     else:
-        print('First mixture and second mixture do not have the same chemical properties.')
+        print('First mixture {} and second mixture {} do not have the same chemical properties.'.format(first.name,
+                                                                                                        second.name))
     return

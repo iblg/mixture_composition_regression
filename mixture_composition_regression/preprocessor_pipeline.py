@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def get_Xy(m, lbounds=(900, 3200), ycol=None):
+def get_Xy(m, lbounds, ycol=None):
     """
 
     :param lbounds: tuple, default (900, 3200).
@@ -26,24 +26,23 @@ def get_Xy(m, lbounds=(900, 3200), ycol=None):
     :param X: numpy array
     Contains the training variables.
     """
-    # X = []
-    y = []
+
     da = m.da
 
-    if lbounds is not None:
-        bds = (da.l.values > lbounds[0]) & (da.l.values < lbounds[1])
-        da = da.where(bds).dropna(dim='l')
+    bds = (da.l.values > lbounds[0]) & (da.l.values < lbounds[1])
+    da = da.where(bds).dropna(dim='l')
 
     chems = da.coords
     del chems['l']
     del chems['name']
 
     first = 0
-    # y = np.array([[]])
-    for val in da.coords['name'].values:
-        selection = da.sel({'name': val}).dropna(dim='l', how='all')
-
+    for sample in da.coords['name'].values:
+        selection = da.sel({'name': sample}).dropna(dim='l', how='all')
+        print(sample)
+        print(selection)
         first_chem = 0
+
         for chem in chems:
             if first_chem == 0:
                 comp = selection.coords[chem]
