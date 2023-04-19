@@ -48,8 +48,6 @@ def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture
             l_bounds = (min(m.samples[0].l), max(m.samples[0].l))
 
         wl = get_window_list(l_bounds[0], l_bounds[1], nwindows=n)
-        print('Window list:')
-        print(wl)
 
         for idx, model in enumerate(models):
             print('Running analysis on', model.estimator)
@@ -61,16 +59,8 @@ def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture
                     y, X = get_Xy(m, lbounds=l_window, ycol=ycol)  # get y, X data
                     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=tts_test_size,
                                                                     random_state=tts_random_state)
-                    print('No test data was provided')
-                    print(X)
-                    print(y)
                 else:
-                    print('Test data was provided.')
                     y_train, X_train = get_Xy(m, lbounds=l_window, ycol=ycol)  # get y, X data
-                    print('y_train:')
-                    print(y_train)
-                    print('X_train:')
-                    print(X_train)
 
                     y_test, X_test = get_Xy(test_data, lbounds=l_window, ycol=ycol)  # get y, X data
 
@@ -186,8 +176,8 @@ def main():
                                                            tts_random_state=random_state,
                                                            tolerance=5E-4,
                                                            metric=metric,
-                                                           l_bounds=lbounds
-                                                           # test_data=mix_test
+                                                           l_bounds=lbounds,
+                                                           test_data=mix_test
                                                            )
 
     print('Best model:')

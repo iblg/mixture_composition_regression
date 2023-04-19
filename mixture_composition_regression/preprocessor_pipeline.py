@@ -39,8 +39,6 @@ def get_Xy(m, lbounds, ycol=None):
     first = 0
     for sample in da.coords['name'].values:
         selection = da.sel({'name': sample}).dropna(dim='l', how='all')
-        print(sample)
-        print(selection)
         first_chem = 0
 
         for chem in chems:
