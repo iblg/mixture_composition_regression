@@ -26,7 +26,8 @@ class Mixture:
     def __init__(self,
                  samples,
                  attrs=None,
-                 name=None):
+                 name=None,
+                 sort_da_by_l=True):
         """
         Create a Mixture object.
 
@@ -56,14 +57,18 @@ class Mixture:
             pass
 
         da = xr.concat(da_list, dim='name')
-        self.da = da
+        if sort_da_by_l:
+            self.da = da.sortby(['l'])
+        else:
+            self.da = da
         self.chem_properties = samples[0].chem_properties
         self.samples = samples
         return
 
     def __add__(self, other):
         _check_chem_properties(self, other)
-        self.da = xr.concat([self.da, other.da], dim='name')
+        # self.da = xr.concat([self.da, other.da], dim='name')
+        # self.da = self.da.sortby(['l'], ascending=True)
         [self.samples.append(s) for s in other.samples]
         mix = Mixture(self.samples, attrs=self.attrs)
         return mix
@@ -155,6 +160,13 @@ class Mixture:
 
 
 def _check_samples(samples):
+    """
+    Checks whether all items in a list of samples are Sample objects.
+    Then removes all duplicate Samples.
+    :param samples: a list of Sample objects.
+    samples should be a mixture_composition_regression.mixture.Mixture.samples
+    :return:
+    """
     # check that all are samples
     for s in samples:
         if isinstance(s, mixture_composition_regression.sample.Sample):
@@ -162,30 +174,24 @@ def _check_samples(samples):
         else:
             print('Mixture __init__ got passed something that isn\'t a sample!')
 
-        # check for duplicate samples.
-        # samples_to_delete = []
-        # samps_to_pass = []
-        # for i in range(len(samples)):
-        #     for j in range(i + 1, len(samples)):
-        #         if samples[i].name == samples[j].name:
-        #             print('Two samples have duplicate names! {} and {}.'.format(samples[i].name, samples[j].name))
-        #             samples_to_delete.append(j)
-        #         else:
-        #             samps_to_pass.append(samples[j])
+    # initialize a null list
+    unique_samples = []
+    # traverse for all elements
+    for s in samples:
+        if s not in unique_samples:
+            unique_samples.append(s)
+        else:
+            print('Sample {} has a duplicate!'.format(s.name))
 
-        # initialize a null list
-        unique_samples = []
-        # traverse for all elements
-        for s in samples:
-            if s not in unique_samples:
-                unique_samples.append(s)
-            else:
-                print('Sample {} has a duplicate!'.format(s.name))
-
-        return unique_samples
+    return unique_samples
 
 
 def _check_savefile_mode(savefile_mode):
+    """
+    This ensures that savefile_mode is being passed an appropriate mode (either to write or append).
+    :param savefile_mode: str. Should be 'w' for write or 'a' for append.
+    :return:
+    """
     if savefile_mode == 'w':
         pass
     elif savefile_mode == 'a':
@@ -195,9 +201,18 @@ def _check_savefile_mode(savefile_mode):
     return
 
 
-def _check_chem_properties(first, second):
+def _check_chem_properties(first: Mixture, second: Mixture):
+    """
+    This function checks that the chemical properties of two mixtures are identical when they are being added.
+    :param first: mixture_composition_regression.mixture.Mixture
+    The first mixture being added.
+    :param second: mixture_composition_regression.mixture.Mixture
+    The second mixture being added.
+    :return:
+    """
     if first.chem_properties == second.chem_properties:
         pass
     else:
-        print('First mixture and second mixture do not have the same chemical properties.')
+        print('First mixture {} and second mixture {} do not have the same chemical properties.'.format(first.name,
+                                                                                                        second.name))
     return

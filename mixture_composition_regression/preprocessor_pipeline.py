@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def get_Xy(m, lbounds=(900, 3200), ycol=None):
+def get_Xy(m, lbounds, ycol=None):
     """
 
     :param lbounds: tuple, default (900, 3200).
@@ -26,24 +26,22 @@ def get_Xy(m, lbounds=(900, 3200), ycol=None):
     :param X: numpy array
     Contains the training variables.
     """
-    # X = []
-    y = []
+
     da = m.da
 
-    if lbounds is not None:
-        bds = (da.l.values > lbounds[0]) & (da.l.values < lbounds[1])
-        da = da.where(bds).dropna(dim='l')
+
+    bds = (da.l.values > lbounds[0]) & (da.l.values < lbounds[1])
+    da = da.where(bds).dropna(dim='l')
 
     chems = da.coords
     del chems['l']
     del chems['name']
 
     first = 0
-    # y = np.array([[]])
-    for val in da.coords['name'].values:
-        selection = da.sel({'name': val}).dropna(dim='l', how='all')
-
+    for sample in da.coords['name'].values:
+        selection = da.sel({'name': sample}).dropna(dim='l', how='all')
         first_chem = 0
+
         for chem in chems:
             if first_chem == 0:
                 comp = selection.coords[chem]
@@ -115,7 +113,7 @@ def plot_metric(y_test, y_train, y_pred, metric_label, metric_test, metric_train
         '{} on testing set'.format(metric_label): '{:.4f}'.format(metric_test),
     }
 
-    _, ax = plt.subplots(figsize=(5, 5))
+    fig, ax = plt.subplots(figsize=(5, 5))
     PredictionErrorDisplay.from_predictions(
         y_test, y_pred, kind="actual_vs_predicted", ax=ax, scatter_kwargs={"alpha": 0.5}
     )
@@ -127,6 +125,7 @@ def plot_metric(y_test, y_train, y_pred, metric_label, metric_test, metric_train
                 ha='right', va='bottom')
         ax.text(0.95, 0.05, r'$\lambda_{\mathrm{max}} =$' + '{:3.1f}'.format(wl_window[1]), transform=ax.transAxes,
                 ha='right', va='bottom')
+
     for name, score in scores.items():
         ax.plot([], [], " ", label=f"{name}: {score}")
     ax.legend(loc="upper left")
@@ -138,5 +137,5 @@ def plot_metric(y_test, y_train, y_pred, metric_label, metric_test, metric_train
     if savefile is None:
         pass
     else:
-        plt.savefig(savefile + '.png', dpi=400)
-    return _, ax
+        fig.savefig(savefile + '.png', dpi=400)
+    return fig, ax
