@@ -125,6 +125,7 @@ def plot_metric(y_test, y_train, y_pred, metric_label, metric_test, metric_train
                 ha='right', va='bottom')
         ax.text(0.95, 0.05, r'$\lambda_{\mathrm{max}} =$' + '{:3.1f}'.format(wl_window[1]), transform=ax.transAxes,
                 ha='right', va='bottom')
+
     for name, score in scores.items():
         ax.plot([], [], " ", label=f"{name}: {score}")
     ax.legend(loc="upper left")

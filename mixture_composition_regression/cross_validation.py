@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import sklearn
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import train_test_split
@@ -30,14 +31,16 @@ def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture
                                tts_random_state: int = None,
                                tolerance: float = 0.01,
                                metric: sklearn.metrics = None,
-                               test_data: mixture_composition_regression.mixture.Mixture = None):
-
+                               metric_label: str = None,
+                               test_data: mixture_composition_regression.mixture.Mixture = None,
+                               plot_comparison: bool = False,
+                               plot_comparison_savefile: str = None):
     if metric is None:
         metric = mean_squared_error
     else:
         pass
 
-    best_metric = 10 ** 10
+    best_score = 10 ** 10
 
     viable_models = []
     for n in nwindows:
@@ -58,11 +61,10 @@ def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture
                 if test_data is None:
                     y, X = get_Xy(m, lbounds=l_window, ycol=ycol)  # get y, X data
                     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=tts_test_size,
-                                                                    random_state=tts_random_state)
+                                                                        random_state=tts_random_state)
                 else:
                     y_train, X_train = get_Xy(m, lbounds=l_window, ycol=ycol)  # get y, X data
                     y_test, X_test = get_Xy(test_data, lbounds=l_window, ycol=ycol)
-
 
                 model_instance = model.fit(X_train,
                                            y_train)  # model instance is the model with optimized params by gridsearch CV
@@ -71,15 +73,32 @@ def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture
 
                 y_pred = model_instance.predict(X_test)
                 train_eval = metric(y_train, model_instance.predict(X_train))
-                test_eval = metric(y_test, y_pred)
+                score = metric(y_test, y_pred)
 
-                if test_eval < tolerance:
-                    viable_models.append([model_instance.best_estimator_, l_window, test_eval])
+                if score < tolerance:
+                    viable_models.append([model_instance.best_estimator_, l_window, score])
 
-                if test_eval < best_metric:
-                    best_metric = test_eval
-                    best_model = [model_instance.best_estimator_, l_window, test_eval]
+                if score < best_score:
+                    best_score = score
+                    best_model = [model_instance.best_estimator_, l_window, score]
 
+    if plot_comparison is False:
+        pass
+    else:  # if we do want to plot a comparison between real and predicted values,
+        if test_data is None: # we get the X,y data using either test-train split or specified values
+            y, X = get_Xy(m, lbounds=best_model[1], ycol=ycol)
+            X_train, X_test, y_train, y_test = train_test_split(X, y,
+                                                                test_size=tts_test_size, random_state=tts_random_state)
+        else:
+            y_train, X_train = get_Xy(m, lbounds=best_model[1], ycol=ycol)
+            y_test, X_test = get_Xy(test_data, lbounds=best_model[1], ycol=ycol)
+
+        y_pred = best_model[0].predict(X_test)
+        metric_train = metric(y_train, best_model[0].predict(X_train))
+        metric_test = metric(y_test, y_pred)
+
+        plot_metric(y_test, y_train, y_pred, metric_label, metric_test, metric_train,
+                    savefile=plot_comparison_savefile + metric_label, wl_window=best_model[1], display=True)
     return viable_models, best_model
 
 
@@ -174,31 +193,17 @@ def main():
                                                            tts_random_state=random_state,
                                                            tolerance=5E-4,
                                                            metric=metric,
+                                                           metric_label=metric_label,
                                                            l_bounds=lbounds,
-                                                           test_data=mix_test
+                                                           test_data=mix_test,
+                                                           plot_comparison=True,
+                                                           plot_comparison_savefile='./plots/test'
                                                            )
 
     print('Best model:')
     print(best_model[1])
     print(best_model[0])
 
-    # FOR IF YOU DON'T SUPPLY TEST_DATA
-    # y, X = get_Xy(mix_train, lbounds=best_model[1], ycol=ycol)
-    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=tts_size,
-    #                                                     random_state=random_state)
-
-    # FOR IF YOU DO SUPPLY TEST_DATA
-    y_train, X_train = get_Xy(mix_train, lbounds=best_model[1], ycol=ycol)
-    y_test, X_test = get_Xy(mix_test, lbounds=best_model[1], ycol=ycol)
-    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=tts_size,
-    #                                                     random_state=random_state)
-
-    y_pred = best_model[0].predict(X_test)
-    metric_train = metric(y_train, best_model[0].predict(X_train))
-    metric_test = metric(y_test, y_pred)
-    plt.style.use('default')
-    plot_metric(y_test, y_train, y_pred, metric_label, metric_test, metric_train,
-                savefile='./plots/nacl' + metric_label, wl_window=best_model[1], display=False)
     return
 
 
