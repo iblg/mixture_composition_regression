@@ -1,8 +1,4 @@
-import mixture_composition_regression as mcr
 from sklearn.model_selection import learning_curve, validation_curve
-from mixture_composition_regression.cross_validation import cv_on_model_and_wavelength, plot_metric
-from mixture_composition_regression.tests.import_training_set import import_training_set
-from sklearn.model_selection import LearningCurveDisplay
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 import numpy as np
@@ -50,6 +46,7 @@ def plot_validation_curve(model,
                           X,
                           param: dict,
                           log_x: bool = False,
+                          log_y: bool = False,
                           scoring: str = 'neg_mean_absolute_error',
                           cv: int = 5,
                           savefile: str = None):
@@ -66,6 +63,8 @@ def plot_validation_curve(model,
     ax = fig.add_subplot(gs[0])
     train_scores = np.array(train_scores)
     valid_scores = np.array(valid_scores)
+    if log_y:
+        train_scores, valid_scores = np.abs(train_scores), np.abs(valid_scores) # This is some pretty dodgy work.
     ax.errorbar(param_range, train_scores.mean(axis=1), yerr=train_scores.std(axis=1), label='Training scores')
     ax.errorbar(param_range, valid_scores.mean(axis=1), yerr=valid_scores.std(axis=1), label='Validation scores')
     print(param_range)
@@ -77,12 +76,33 @@ def plot_validation_curve(model,
     if log_x:
         ax.set_xscale('log')
 
+    if log_y:
+        ax.set_yscale('log')
+        ax.set_ylabel('Absolute val of ' + scoring)
+
+
     plt.legend()
     plt.show()
 
     if savefile is None:
         pass
     else:
-        plt.savefig(savefile + '.png', dpi=400)
+        fig.savefig(savefile + param_name +'.png', dpi=400)
+
+    return
+
+
+def plot_validation_curve_over_param_grid(model,
+                                          y,
+                                          X,
+                                          param_grid: dict,
+                                          log_x: bool = False,
+                                          log_y: bool = False,
+                                          scoring: str = 'neg_mean_absolute_error',
+                                          cv: int = 5,
+                                          savefile: str = None):
+    for key, val in param_grid.items():
+        plot_validation_curve(model, y, X, param={key: val},
+                              log_x=log_x, log_y=log_y, scoring=scoring, cv=cv, savefile=savefile)
 
     return

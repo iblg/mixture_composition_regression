@@ -15,7 +15,7 @@ import numpy as np
 from mixture_composition_regression.tests.import_training_set import import_training_set
 from mixture_composition_regression.cross_validation import cv_on_model_and_wavelength
 
-from diagnostic_plots import plot_learning_curve, plot_validation_curve
+from diagnostic_plots import plot_learning_curve, plot_validation_curve, plot_validation_curve_over_param_grid
 
 
 def main():
@@ -44,20 +44,22 @@ def main():
         Ridge(), {'alpha': np.logspace(-7, 7, 14)}, scoring=sc, cv=5
     )
 
+    kr_param_grid = {'kernel': ["rbf", 'linear'],
+                    "alpha": np.logspace(-7, 7, 11),
+                    "gamma": np.logspace(-7, 7, 11)}
     kr = GridSearchCV(
         KernelRidge(),
-        param_grid={'kernel': ["rbf", 'linear'],
-                    "alpha": np.logspace(-5, 5, 11),
-                    "gamma": np.logspace(-5, 5, 11)},
+        param_grid=kr_param_grid,
         scoring=sc,
     )
 
+    svr_param_grid = {'kernel': ['linear', 'rbf'],
+         'gamma': ['scale', 'auto'],
+         'epsilon': np.logspace(-7, 7, 10)
+         }
     svr = GridSearchCV(
         SVR(),
-        {'kernel': ['linear', 'rbf'],
-         'gamma': ['scale', 'auto'],
-         'epsilon': np.logspace(-5, 5, 10)
-         },
+        svr_param_grid,
         scoring=sc,
     )
 
@@ -72,9 +74,9 @@ def main():
     )
 
     cv_models = [
-        ridge,
+        # ridge,
         # kr,
-        # svr,
+        svr,
         # knnr,
         # mlp,
     ]
@@ -95,7 +97,8 @@ def main():
 
     model = best_model[0]
     plot_learning_curve(model, y, X, scoring='neg_mean_squared_error')
-    plot_validation_curve(model, y, X, {'alpha': np.logspace(-7, 0, 36)}, log_x=True, scoring='neg_mean_squared_error')
+    plot_validation_curve_over_param_grid(model, y, X, svr_param_grid, log_x=True, log_y=True, scoring='neg_mean_absolute_error', cv=5, savefile='kr')
+    # plot_validation_curve(model, y, X, {'alpha': np.logspace(-7, 0, 36)}, log_x=True, scoring='neg_mean_squared_error')
 
     return
 
