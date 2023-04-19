@@ -189,6 +189,8 @@ def main():
         knnr,
         # mlp,
     ]
+    print('hi')
+
 
     viable_models, best_model = cv_on_model_and_wavelength(
         mix_train,
