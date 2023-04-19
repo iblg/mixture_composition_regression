@@ -40,7 +40,7 @@ def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture
     else:
         pass
 
-    best_score = 10 ** 10
+    best_score = 10 ** 20
 
     viable_models = []
     for n in nwindows:
@@ -77,8 +77,10 @@ def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture
 
                 if score < tolerance:
                     viable_models.append([model_instance.best_estimator_, l_window, score])
-
+                print('best score: {}'.format(best_score))
+                print('current score: {}'.format(score))
                 if score < best_score:
+                    print('we have a new best model!')
                     best_score = score
                     best_model = [model_instance.best_estimator_, l_window, score]
 
@@ -133,8 +135,8 @@ def main():
     lbounds = [800, 3200]  # set global bounds on wavelength
 
     mix_test = water_dipa_nacl.filter({'nacl': [10 ** -5, 1], 'dipa': [10 ** -5, 1]})
-    nwindows = [100]
-    sc = 'neg_mean_squared_error'
+    nwindows = [1, 10, 30]
+    sc = 'neg_mean_absolute_error'
     random_state = 42
     tts_size = 0.25
     ycol = 0  # water
@@ -150,7 +152,7 @@ def main():
     # m.plot_by(idx=2, savefig='plotby', alpha=1, logy=True, cmap_name='viridis', spect_bounds=lbounds, stylesheet=None)
 
     ridge = GridSearchCV(
-        Ridge(), {'alpha': np.logspace(-7, 7, 11)}, scoring=sc, cv=5
+        Ridge(), {'alpha': np.logspace(-7, 7, 14)}, scoring=sc, cv=5
     )
 
     kr = GridSearchCV(
@@ -171,7 +173,7 @@ def main():
     )
 
     knnr = GridSearchCV(
-        KNeighborsRegressor(), {'n_neighbors': 5 + np.arange(10)}, scoring=sc
+        KNeighborsRegressor(), {'n_neighbors': 5 + np.arange(5)}, scoring=sc
     )
 
     mlp = GridSearchCV(
@@ -182,27 +184,40 @@ def main():
 
     cv_models = [
         ridge,
-        # kr,
-        # svr,
-        # knnr,
+        kr,
+        svr,
+        knnr,
         # mlp,
     ]
 
-    viable_models, best_model = cv_on_model_and_wavelength(water_dipa, nwindows, cv_models, ycol=ycol,
+    viable_models, best_model = cv_on_model_and_wavelength(
+        mix_train,
+        nwindows, cv_models, ycol=ycol,
+                                                           test_data=mix_test,
                                                            tts_test_size=tts_size,
                                                            tts_random_state=random_state,
                                                            tolerance=5E-4,
                                                            metric=metric,
                                                            metric_label=metric_label,
                                                            l_bounds=lbounds,
-                                                           test_data=mix_test,
                                                            plot_comparison=True,
-                                                           plot_comparison_savefile='./plots/test'
+                                                           plot_comparison_savefile='./plots/axes_train'
                                                            )
 
-    print('Best model:')
-    print(best_model[1])
-    print(best_model[0])
+    viable_models, best_model = cv_on_model_and_wavelength(water_dipa_nacl,
+                                                           nwindows,
+                                                           cv_models,
+                                                           ycol=ycol,
+                                                           tts_test_size=tts_size,
+                                                           tts_random_state=random_state,
+                                                           tolerance=5E-4,
+                                                           metric=metric,
+                                                           metric_label=metric_label,
+                                                           l_bounds=lbounds,
+                                                           plot_comparison=True,
+                                                           plot_comparison_savefile='./plots/normal_tts'
+                                                           )
+
 
     return
 

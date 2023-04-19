@@ -113,7 +113,7 @@ def plot_metric(y_test, y_train, y_pred, metric_label, metric_test, metric_train
         '{} on testing set'.format(metric_label): '{:.4f}'.format(metric_test),
     }
 
-    _, ax = plt.subplots(figsize=(5, 5))
+    fig, ax = plt.subplots(figsize=(5, 5))
     PredictionErrorDisplay.from_predictions(
         y_test, y_pred, kind="actual_vs_predicted", ax=ax, scatter_kwargs={"alpha": 0.5}
     )
@@ -137,5 +137,5 @@ def plot_metric(y_test, y_train, y_pred, metric_label, metric_test, metric_train
     if savefile is None:
         pass
     else:
-        plt.savefig(savefile + '.png', dpi=400)
-    return _, ax
+        fig.savefig(savefile + '.png', dpi=400)
+    return fig, ax
