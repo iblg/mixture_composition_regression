@@ -1,5 +1,5 @@
 from mixture_composition_regression.preprocessor_pipeline import *
-from mixture_composition_regression.tests.import_training_set import import_training_set
+from mixture_composition_regression.examples.import_training_set import import_training_set
 from sklearn.model_selection import train_test_split
 
 

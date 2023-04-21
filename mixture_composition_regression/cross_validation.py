@@ -26,7 +26,7 @@ def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture
                                nwindows: list,
                                models: list,
                                l_bounds: tuple,
-                               ycol=None,
+                               target_chem=None,
                                tts_test_size: float = None,
                                tts_random_state: int = None,
                                tolerance: float = 0.01,
@@ -59,12 +59,12 @@ def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture
                 # l_window[0] -= 1E-5  # this stops the bottom-most interval from being shorter than the others.
 
                 if test_data is None:
-                    y, X = get_Xy(m, lbounds=l_window, ycol=ycol)  # get y, X data
+                    y, X = get_Xy_2(m, lbounds=l_window, target_chem=target_chem)  # get y, X data
                     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=tts_test_size,
                                                                         random_state=tts_random_state)
                 else:
-                    y_train, X_train = get_Xy(m, lbounds=l_window, ycol=ycol)  # get y, X data
-                    y_test, X_test = get_Xy(test_data, lbounds=l_window, ycol=ycol)
+                    y_train, X_train = get_Xy_2(m, lbounds=l_window, target_chem=target_chem)  # get y, X data
+                    y_test, X_test = get_Xy_2(test_data, lbounds=l_window, target_chem=target_chem)
 
                 model_instance = model.fit(X_train,
                                            y_train)  # model instance is the model with optimized params by gridsearch CV
@@ -77,10 +77,10 @@ def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture
 
                 if score < tolerance:
                     viable_models.append([model_instance.best_estimator_, l_window, score])
-                print('best score: {}'.format(best_score))
-                print('current score: {}'.format(score))
+
                 if score < best_score:
                     print('we have a new best model!')
+                    print('current score: {}'.format(score))
                     best_score = score
                     best_model = [model_instance.best_estimator_, l_window, score]
 
@@ -88,12 +88,12 @@ def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture
         pass
     else:  # if we do want to plot a comparison between real and predicted values,
         if test_data is None: # we get the X,y data using either test-train split or specified values
-            y, X = get_Xy(m, lbounds=best_model[1], ycol=ycol)
+            y, X = get_Xy_2(m, lbounds=best_model[1], target_chem=target_chem)
             X_train, X_test, y_train, y_test = train_test_split(X, y,
                                                                 test_size=tts_test_size, random_state=tts_random_state)
         else:
-            y_train, X_train = get_Xy(m, lbounds=best_model[1], ycol=ycol)
-            y_test, X_test = get_Xy(test_data, lbounds=best_model[1], ycol=ycol)
+            y_train, X_train = get_Xy_2(m, lbounds=best_model[1], target_chem=target_chem)
+            y_test, X_test = get_Xy_2(test_data, lbounds=best_model[1], target_chem=target_chem)
 
         y_pred = best_model[0].predict(X_test)
         metric_train = metric(y_train, best_model[0].predict(X_train))

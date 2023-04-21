@@ -13,10 +13,10 @@ from sklearn.kernel_ridge import KernelRidge
 def main():
     water_dipa_nacl, water_dipa, water_nacl = import_training_set()
 
-    lbounds = [2000, 2500]  # set global bounds on wavelength
+    lbounds = (900, 2000)  # set global bounds on wavelength
 
     mix_test = water_dipa_nacl.filter({'nacl': [10 ** -5, 1], 'dipa': [10 ** -5, 1]})
-    nwindows = [1, 10, 30]
+    nwindows = [1, 10]
     sc = 'neg_mean_absolute_error'
     random_state = 42
     tts_size = 0.25
@@ -65,15 +65,17 @@ def main():
 
     cv_models = [
         ridge,
-        kr,
-        svr,
-        knnr,
+        # kr,
+        # svr,
+        # knnr,
         # mlp,
     ]
 
     viable_models, best_model = cv_on_model_and_wavelength(
         mix_train,
-        nwindows, cv_models, ycol=ycol,
+        nwindows,
+        cv_models,
+        target_chem=0,
         test_data=mix_test,
         tts_test_size=tts_size,
         tts_random_state=random_state,
@@ -82,7 +84,7 @@ def main():
         metric_label=metric_label,
         l_bounds=lbounds,
         plot_comparison=True,
-        plot_comparison_savefile='./plots/axes_train'
+        plot_comparison_savefile='../plots/axes_train'
     )
 
     # viable_models, best_model = cv_on_model_and_wavelength(water_dipa_nacl,

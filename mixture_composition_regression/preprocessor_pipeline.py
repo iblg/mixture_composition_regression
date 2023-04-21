@@ -58,13 +58,10 @@ def get_Xy(m, lbounds, ycol=None):
             X = np.append(X, x, axis=1)
             y = np.append(y, composition, axis=1)
 
-    X, y = X.T, y.T
     if ycol is None:
         pass
     else:
         y = y[:, ycol]
-
-
     return y, X
 
 def get_Xy_2(m, lbounds, target_chem=None):
@@ -80,14 +77,14 @@ def get_Xy_2(m, lbounds, target_chem=None):
             x = sample.a.loc[lbounds[0]:lbounds[1]].rename(sample.name)
             X = pd.concat([X, x], axis=1)
 
-    y, X = y.T, X.T
-
     if target_chem is None:
         pass
     elif type(target_chem) is int:
         y = y.iloc[target_chem]
     elif type(target_chem) is str:
-        y = y[target_chem]
+        y = y.loc[target_chem]
+
+    X = X.T
 
     return y, X
 
