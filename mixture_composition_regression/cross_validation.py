@@ -16,7 +16,7 @@ from sklearn.metrics import mean_absolute_percentage_error
 import numpy as np
 
 import mixture_composition_regression.mixture
-from mixture_composition_regression.tests.import_training_set import import_training_set
+from mixture_composition_regression.examples.import_training_set import import_training_set
 from mixture_composition_regression.preprocessor_pipeline import *
 
 
@@ -26,7 +26,7 @@ def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture
                                nwindows: list,
                                models: list,
                                l_bounds: tuple,
-                               ycol: int = None,
+                               ycol=None,
                                tts_test_size: float = None,
                                tts_random_state: int = None,
                                tolerance: float = 0.01,

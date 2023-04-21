@@ -1,9 +1,7 @@
-import pandas
 import pandas as pd
-import xarray as xr
 
 
-def clean_data(filename: str) -> pandas.DataFrame:
+def clean_data(filename: str) -> pd.DataFrame:
     """
     Open and clean a csv file of data.
 
