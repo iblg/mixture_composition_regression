@@ -15,7 +15,9 @@ def main():
 
     lbounds = (900, 2000)  # set global bounds on wavelength
 
+    mix_train = water_dipa + water_nacl
     mix_test = water_dipa_nacl.filter({'nacl': [10 ** -5, 1], 'dipa': [10 ** -5, 1]})
+
     nwindows = [1, 10]
     sc = 'neg_mean_absolute_error'
     random_state = 42
@@ -28,7 +30,6 @@ def main():
     metric = mean_absolute_error
     metric_label = 'MAE'
 
-    mix_train = water_dipa + water_nacl
 
     # m.plot_by(idx=2, savefig='plotby', alpha=1, logy=True, cmap_name='viridis', spect_bounds=lbounds, stylesheet=None)
 
@@ -36,25 +37,28 @@ def main():
         Ridge(), {'alpha': np.logspace(-7, 7, 14)}, scoring=sc, cv=5
     )
 
+    kr_param_grid = {'kernel': ["rbf", 'linear'],
+                    "alpha": np.logspace(-7, 7, 11),
+                    "gamma": np.logspace(-7, 7, 11)}
     kr = GridSearchCV(
         KernelRidge(),
-        param_grid={'kernel': ["rbf", 'linear'],
-                    "alpha": np.logspace(-5, 5, 11),
-                    "gamma": np.logspace(-5, 5, 11)},
+        param_grid=kr_param_grid,
         scoring=sc,
     )
 
+    svr_param_grid = {'kernel': ['linear', 'rbf'],
+         'gamma': ['scale', 'auto'],
+         'epsilon': np.logspace(-7, 7, 10)
+         }
     svr = GridSearchCV(
         SVR(),
-        {'kernel': ['linear', 'rbf'],
-         'gamma': ['scale', 'auto'],
-         'epsilon': np.logspace(-5, 5, 10)
-         },
+        svr_param_grid,
         scoring=sc,
     )
 
+    knnr_param_grid = {'n_neighbors': 5 + np.arange(5)}
     knnr = GridSearchCV(
-        KNeighborsRegressor(), {'n_neighbors': 5 + np.arange(5)}, scoring=sc
+        KNeighborsRegressor(), knnr_param_grid, scoring=sc
     )
 
     mlp = GridSearchCV(

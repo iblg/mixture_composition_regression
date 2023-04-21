@@ -2,7 +2,6 @@ from mixture_composition_regression.sample import Sample
 from mixture_composition_regression.import_spectrum import clean_data
 import pandas as pd
 
-
 def main():
     cp = {'name': ['water', 'dipa', 'nacl'],
           'mw': [18.015, 101.19, 58.44],
@@ -18,8 +17,8 @@ def main():
     water1.plot(savefile='water', log_y=False)
     print(pd.concat([water1.l, water1.a], axis='columns'))
 
-    return
 
+    return
 
 if __name__ == '__main__':
     main()
