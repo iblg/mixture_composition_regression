@@ -23,7 +23,9 @@ def main():
 
     lbounds = [800, 3200]  # set global bounds on wavelength
 
+    mix_train = water_dipa + water_nacl
     mix_test = water_dipa_nacl.filter({'nacl': [10 ** -5, 1], 'dipa': [10 ** -5, 1]})
+
     nwindows = [1, 10]
     sc = 'neg_mean_absolute_error'
     random_state = 42
@@ -36,7 +38,6 @@ def main():
     metric = mean_absolute_error
     metric_label = 'MAE'
 
-    mix_train = water_dipa + water_nacl
 
     # m.plot_by(idx=2, savefig='plotby', alpha=1, logy=True, cmap_name='viridis', spect_bounds=lbounds, stylesheet=None)
 
@@ -63,8 +64,9 @@ def main():
         scoring=sc,
     )
 
+    knnr_param_grid = {'n_neighbors': 5 + np.arange(5)}
     knnr = GridSearchCV(
-        KNeighborsRegressor(), {'n_neighbors': 5 + np.arange(5)}, scoring=sc
+        KNeighborsRegressor(), knnr_param_grid, scoring=sc
     )
 
     mlp = GridSearchCV(
@@ -75,16 +77,17 @@ def main():
 
     cv_models = [
         # ridge,
-        # kr,
-        svr,
+        kr,
+        # svr,
         # knnr,
         # mlp,
     ]
 
     viable_models, best_model, y, X = cv_on_model_and_wavelength(
-        water_dipa_nacl,
+        # water_dipa_nacl,
+        mix_train,
         nwindows, cv_models, ycol=ycol,
-        # test_data=mix_test,
+        test_data=mix_test,
         tts_test_size=tts_size,
         tts_random_state=random_state,
         tolerance=5E-4,
@@ -97,7 +100,7 @@ def main():
 
     model = best_model[0]
     plot_learning_curve(model, y, X, scoring='neg_mean_squared_error')
-    plot_validation_curve_over_param_grid(model, y, X, svr_param_grid, log_x=True, log_y=True, scoring='neg_mean_absolute_error', cv=5, savefile='kr')
+    plot_validation_curve_over_param_grid(model, y, X, kr_param_grid, log_x=True, log_y=True, scoring='neg_mean_absolute_error', cv=5, savefile='kr')
     # plot_validation_curve(model, y, X, {'alpha': np.logspace(-7, 0, 36)}, log_x=True, scoring='neg_mean_squared_error')
 
     return
