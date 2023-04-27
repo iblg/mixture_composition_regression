@@ -22,9 +22,7 @@ def main():
     sc = 'neg_mean_absolute_error'
     random_state = 42
     tts_size = 0.25
-    ycol = 0  # water
-    # ycol = 1  # dipa
-    # ycol = 2  # salt
+
     # metric = mean_absolute_percentage_error
     # metric_label = 'Mean abs fractional err'
     metric = mean_absolute_error
@@ -79,7 +77,7 @@ def main():
         mix_train,
         nwindows,
         cv_models,
-        target_chem=0,
+        target_chem='water',
         test_data=mix_test,
         tts_test_size=tts_size,
         tts_random_state=random_state,
@@ -90,6 +88,8 @@ def main():
         plot_comparison=True,
         plot_comparison_savefile='../plots/axes_train'
     )
+
+
 
     # viable_models, best_model = cv_on_model_and_wavelength(water_dipa_nacl,
     #                                                        nwindows,
