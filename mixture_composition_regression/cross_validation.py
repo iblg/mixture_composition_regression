@@ -1,26 +1,19 @@
-import matplotlib.pyplot as plt
 import sklearn
-from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import train_test_split
-from sklearn.kernel_ridge import KernelRidge
-from sklearn.svm import SVR
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.neural_network import MLPRegressor
-from sklearn.gaussian_process.kernels import ExpSineSquared
+
 
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import mean_absolute_percentage_error
-# from ib_mpl_stylesheet.ib_mpl_stylesheet import ib_mpl_style
+
+
+import mixture_composition_regression.mixture
+
+from mixture_composition_regression.preprocessor_pipeline import get_Xy
+from mixture_composition_regression.preprocessor_pipeline import plot_metric
 
 import numpy as np
 
-import mixture_composition_regression.mixture
-from mixture_composition_regression.examples.import_training_set import import_training_set
-from mixture_composition_regression.preprocessor_pipeline import *
-
-
-# They need to be able to try different models, different params within those models, and different wavelength ranges
 
 def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture,
                                nwindows: list,
@@ -101,7 +94,9 @@ def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture
 
         plot_metric(y_test, y_train, y_pred, metric_label, metric_test, metric_train,
                     savefile=plot_comparison_savefile + metric_label, wl_window=best_model[1], display=True)
-    return viable_models, best_model
+
+    best_y, best_X = get_Xy(m, lbounds=best_model[1], ycol=ycol)
+    return viable_models, best_model, best_y, best_X
 
 
 def get_window_list(start: float, end: float, nwindows: list = None, width: float = None):
@@ -127,5 +122,3 @@ def get_window_list(start: float, end: float, nwindows: list = None, width: floa
 
     windows = np.concatenate((starts, ends), axis=1)
     return windows
-
-
