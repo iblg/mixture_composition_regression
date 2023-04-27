@@ -60,7 +60,7 @@ class Sample:
         self.name = name
 
         self.l = data.iloc[:, l_col_idx]
-        self.a = data.iloc[:, data_col_idx]
+        self.a = pd.Series(data.iloc[:, data_col_idx], index=self.l).sort_index()
         # self.la = np.concat(self.l, self.a, axis = 'columns')
         self.chem_properties = chem_properties
 

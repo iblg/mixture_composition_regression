@@ -1,12 +1,10 @@
+import pandas as pd
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OneHotEncoder
-
 from sklearn.compose import TransformedTargetRegressor
 from sklearn.compose import make_column_transformer
-
 from sklearn.metrics import PredictionErrorDisplay
 from sklearn.metrics import median_absolute_error
-
 from sklearn.linear_model import Ridge
 
 import numpy as np
@@ -29,7 +27,6 @@ def get_Xy(m, lbounds, ycol=None):
 
     da = m.da
 
-
     bds = (da.l.values > lbounds[0]) & (da.l.values < lbounds[1])
     da = da.where(bds).dropna(dim='l')
 
@@ -38,33 +35,57 @@ def get_Xy(m, lbounds, ycol=None):
     del chems['name']
 
     first = 0
-    for sample in da.coords['name'].values:
-        selection = da.sel({'name': sample}).dropna(dim='l', how='all')
+    for i in da.coords['name'].values:
+        selection = da.sel({'name': i}).dropna(dim='l', how='all')
         first_chem = 0
 
-        for chem in chems:
+        for chem in chems: # get the composition of the mixture.
             if first_chem == 0:
-                comp = selection.coords[chem]
+                composition = selection.coords[chem]
                 first_chem += 1
             else:
-                comp = np.append(comp, selection.coords[chem].values)
+                composition = np.append(composition, selection.coords[chem].values)
 
         x = selection.values.reshape(-1, 1)
-        comp = comp.reshape(-1, 1)
+        x = pd.DataFrame(x,)
+        composition = composition.reshape(-1, 1)
 
         if first == 0:
             X = x
-            y = comp
+            y = composition
             first += 1
         else:
             X = np.append(X, x, axis=1)
-            y = np.append(y, comp, axis=1)
+            y = np.append(y, composition, axis=1)
 
-    X, y = X.T, y.T
     if ycol is None:
         pass
     else:
         y = y[:, ycol]
+    return y, X
+
+def get_Xy_2(m, lbounds, target_chem=None):
+
+    for i, sample in enumerate(m.samples):
+        if i == 0:
+            y = sample.w.rename(sample.name)
+            X = sample.a.loc[lbounds[0]:lbounds[1]].rename(sample.name)
+        else:
+            y0 = sample.w.rename(sample.name)
+            y = pd.concat([y, y0], axis=1)
+
+            x = sample.a.loc[lbounds[0]:lbounds[1]].rename(sample.name)
+            X = pd.concat([X, x], axis=1)
+
+    if target_chem is None:
+        pass
+    elif type(target_chem) is int:
+        y = y.iloc[target_chem]
+    elif type(target_chem) is str:
+        y = y.loc[target_chem]
+
+    X = X.T
+
     return y, X
 
 
@@ -105,9 +126,9 @@ def identity(x):
 
 
 def plot_metric(y_test, y_train, y_pred, metric_label, metric_test, metric_train,
-             savefile=None,
-             wl_window=None,
-             display=False):
+                savefile=None,
+                wl_window=None,
+                display=False):
     scores = {
         '{} on training set'.format(metric_label): '{:.4f}'.format(metric_train),
         '{} on testing set'.format(metric_label): '{:.4f}'.format(metric_test),
