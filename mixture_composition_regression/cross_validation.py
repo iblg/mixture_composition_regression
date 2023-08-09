@@ -164,7 +164,7 @@ def get_window_list(start: float,
     :param width: float
     The width of each wavelength (or frequency) interval.
     Note: only nwindows OR width should be provided. Not both.
-    
+
     :param print_windows: bool, default False
     If print_windows is True, the list of windows generated will get printed.
 
