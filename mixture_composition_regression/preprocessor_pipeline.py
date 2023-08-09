@@ -195,9 +195,44 @@ def identity(x):
 
 
 def plot_metric(y_test, y_train, y_pred, metric_label, metric_test, metric_train,
-                savefile=None,
+                filepath=None,
                 wl_window=None,
                 display=False):
+    """
+
+    :param y_test:
+    Target variable data for model evaluation.
+
+    :param y_train:
+    Target variable data used to train model.
+
+    :param y_pred:
+    Model predictions for y_train.
+
+
+    :param metric_label: str
+    String used to name the goodness of fit metric used to evaluate the model.
+    Common examples might be r'$R^{2}$' or r'$\chi^2$'.
+
+    :param metric_test: float
+    Result for goodness of fit on testing data set.
+
+    :param metric_train: float
+    Result for goodness of fit on training data set.
+
+    :param filepath: str, default None
+    The filepath to save a plot of results. If None, no plot is saved.
+
+    :param wl_window: , default None
+    The wavelength window used to train the model.
+    If None, no wavelength is printed on the plot.
+    If not None, the wavelength interval is printed on the plot.
+
+    :param display: bool, default False
+    If True, a plot of results will be shown.
+
+    :return:
+    """
 
     scores = {
         '{} on training set'.format(metric_label): '{:.4f}'.format(metric_train),
@@ -222,11 +257,11 @@ def plot_metric(y_test, y_train, y_pred, metric_label, metric_test, metric_train
     ax.legend(loc="upper left")
     plt.tight_layout()
 
-    if display is True:
+    if display:
         plt.show()
 
-    if savefile is None:
+    if filepath:
         pass
     else:
-        fig.savefig(savefile + '.png', dpi=400)
+        fig.savefig(filepath + '.png', dpi=400)
     return fig, ax
