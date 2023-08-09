@@ -13,10 +13,10 @@ import matplotlib.pyplot as plt
 
 def get_Xy(m, lbounds, ycol=None):
     """
+    :param m: Mixture object.
 
     :param lbounds: tuple, default (900, 3200).
     The lower and upper bounds on the wavelength.
-    :param m: Mixture object.
 
     :return:
     :param y: numpy array
