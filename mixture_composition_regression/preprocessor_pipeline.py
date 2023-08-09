@@ -10,19 +10,39 @@ from sklearn.linear_model import Ridge
 import numpy as np
 import matplotlib.pyplot as plt
 
+def get_chemlist(da):
+    """
+    Returns a list of the chemical species in a mixture.
+
+    :param da: xarray.DataArray object
+    The Mixture.da object being interrogated.
+
+    :return: chems
+    """
+    chems = da.coords
+    del chems['l']
+    del chems['name']
+    return chems
 
 def get_Xy(m, lbounds, ycol=None):
     """
-    :param m: Mixture object.
+    Processes a mixture to get X (data), y (target variable) information to send to the model.
+
+    :param m: Mixture object
+    The mixture object that will be used to develop a model.
 
     :param lbounds: tuple, default (900, 3200).
     The lower and upper bounds on the wavelength.
 
+    :param ycol: int
+    The column index for the target variable
+
     :return:
-    :param y: numpy array
+    :param y: numpy Array
     Contains the target variable.
-    :param X: numpy array
+    :param X: numpy Array
     Contains the training variables.
+
     """
 
     da = m.da
@@ -30,15 +50,14 @@ def get_Xy(m, lbounds, ycol=None):
     bds = (da.l.values > lbounds[0]) & (da.l.values < lbounds[1])
     da = da.where(bds).dropna(dim='l')
 
-    chems = da.coords
-    del chems['l']
-    del chems['name']
+    # get list of chemicals in the mixture
+    chems = get_chemlist(da)
 
     first = 0
     for i in da.coords['name'].values:
         selection = da.sel({'name': i}).dropna(dim='l', how='all')
-        first_chem = 0
 
+        first_chem = 0
         for chem in chems: # get the composition of the mixture.
             if first_chem == 0:
                 composition = selection.coords[chem]
@@ -48,6 +67,7 @@ def get_Xy(m, lbounds, ycol=None):
 
         x = selection.values.reshape(-1, 1)
         x = pd.DataFrame(x,)
+
         composition = composition.reshape(-1, 1)
 
         if first == 0:
@@ -62,9 +82,21 @@ def get_Xy(m, lbounds, ycol=None):
         pass
     else:
         y = y[:, ycol]
+
     return y, X
 
 def get_Xy_2(m, lbounds, target_chem=None):
+    """
+
+    :param m: mixture_composition_regression.Mixture object.
+    The mixture forming the training set for the model.
+    :param lbounds: list
+    List of lower and upper bounds on wavelength range desired.
+    :param target_chem: str or int, default None.
+    If target_chem is int, column index for target chemical data in sample.w
+    If target_chem is str, column name for target chemical data in sample.w
+    :return:
+    """
 
     for i, sample in enumerate(m.samples):
         if i == 0:
@@ -77,6 +109,9 @@ def get_Xy_2(m, lbounds, target_chem=None):
             x = sample.a.loc[lbounds[0]:lbounds[1]].rename(sample.name)
             X = pd.concat([X, x], axis=1)
 
+    X = X.T # transpose the X array
+
+    # Find target variable.
     if target_chem is None:
         pass
     elif type(target_chem) is int:
@@ -84,12 +119,16 @@ def get_Xy_2(m, lbounds, target_chem=None):
     elif type(target_chem) is str:
         y = y.loc[target_chem]
 
-    X = X.T
 
     return y, X
 
 
 def get_preprocessor(cat_columns = []):
+    """
+    :param cat_columns: list of str
+    List of column names describing categorical data.
+    :return:
+    """
     categorical_columns = cat_columns
     preprocessor = make_column_transformer(
         (OneHotEncoder(drop="if_binary"), categorical_columns),
@@ -101,6 +140,31 @@ def get_preprocessor(cat_columns = []):
 
 
 def get_pipeline(preprocessor, regr=None, func=None, inverse_func=None):
+    """
+
+    :param preprocessor:
+    :param regr: regressor
+    :param func: function, default None.
+    Function with which to transform data. If None, no transformation is applied to the data.
+    If another function is provided, such as np.log10, the data is transformed before being regressed, then re-transformed
+    using the inverse function inverse_func
+    :param inverse_func: function, default None.
+    The inverse function used to transform back from func. If func is provided, an inverse_func must also be provided.
+
+    :return:
+    """
+
+    # check some edge cases
+    if func and inverse_func:
+        pass
+    elif not func and not inverse_func:
+        pass
+    elif not inverse_func:
+        print('No inverse_func provided to get_pipeline')
+    elif not func:
+        print('No func provided to get_pipeline; inverse_func provided.')
+
+
     if regr is None:
         regr = Ridge(alpha=1e-8)
 
@@ -122,6 +186,11 @@ def get_pipeline(preprocessor, regr=None, func=None, inverse_func=None):
 
 
 def identity(x):
+    """
+    Simple function that returns unaltered argument.
+    :param x:
+    :return:
+    """
     return x
 
 
@@ -129,6 +198,7 @@ def plot_metric(y_test, y_train, y_pred, metric_label, metric_test, metric_train
                 savefile=None,
                 wl_window=None,
                 display=False):
+
     scores = {
         '{} on training set'.format(metric_label): '{:.4f}'.format(metric_train),
         '{} on testing set'.format(metric_label): '{:.4f}'.format(metric_test),
