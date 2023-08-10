@@ -91,7 +91,7 @@ def get_Xy(m, lbounds, ycol=None):
 def get_Xy_2(m, lbounds, target_chem=None):
     """
     Processes a mixture to get X, the dependent variables, and y, the target variable. Returns y, X.
-    
+
     :param m: mixture_composition_regression.Mixture object.
     The mixture forming the training set for the model.
 

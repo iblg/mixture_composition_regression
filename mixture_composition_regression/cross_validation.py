@@ -7,7 +7,7 @@ from sklearn.metrics import mean_absolute_percentage_error
 
 import mixture_composition_regression.mixture
 
-from mixture_composition_regression.preprocessor_pipeline import get_Xy
+from mixture_composition_regression.preprocessor_pipeline import get_Xy_2
 from mixture_composition_regression.preprocessor_pipeline import plot_metric
 
 import numpy as np
@@ -64,8 +64,9 @@ def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture
     :param plot_comparison_savefile:
     :return:
     """
+    print('in cv_and_wavel')
     for x in nwindows:  # check nwindows
-        if x is int:
+        if isinstance(x, int):
             pass
         else:
             print('Number of window subdividions in cv_on_model_and_wavelength is not an integer value!')
@@ -139,7 +140,7 @@ def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture
         plot_metric(y_test, y_train, y_pred, metric_label, metric_test, metric_train,
                     filepath=plot_comparison_savefile + metric_label, wl_window=best_model[1], display=True)
 
-    best_y, best_X = get_Xy(m, lbounds=best_model[1], ycol=ycol)
+    best_y, best_X = get_Xy_2(m, lbounds=best_model[1], target_chem=target_chem)
     return viable_models, best_model, best_y, best_X
 
 

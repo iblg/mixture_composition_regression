@@ -12,13 +12,14 @@ from sklearn.metrics import mean_absolute_percentage_error
 
 import numpy as np
 
-from mixture_composition_regression.tests.import_training_set import import_training_set
+from mixture_composition_regression.examples.load_dipa_water_nacl_training_set import load_training_set
 from mixture_composition_regression.cross_validation import cv_on_model_and_wavelength
 
 from diagnostic_plots import plot_learning_curve, plot_validation_curve, plot_validation_curve_over_param_grid
 
 
 def main():
+
     water_dipa_nacl, water_dipa, water_nacl = import_training_set()
 
     lbounds = [800, 3200]  # set global bounds on wavelength
@@ -86,7 +87,8 @@ def main():
     viable_models, best_model, y, X = cv_on_model_and_wavelength(
         # water_dipa_nacl,
         mix_train,
-        nwindows, cv_models, ycol=ycol,
+        nwindows, cv_models,
+        ycol=ycol,
         test_data=mix_test,
         tts_test_size=tts_size,
         tts_random_state=random_state,
@@ -102,7 +104,7 @@ def main():
     plot_learning_curve(model, y, X, scoring='neg_mean_squared_error')
     plot_validation_curve_over_param_grid(model, y, X, kr_param_grid, log_x=True, log_y=True, scoring='neg_mean_absolute_error', cv=5, savefile='kr')
     # plot_validation_curve(model, y, X, {'alpha': np.logspace(-7, 0, 36)}, log_x=True, scoring='neg_mean_squared_error')
-
+    print('all finished!')
     return
 
 
