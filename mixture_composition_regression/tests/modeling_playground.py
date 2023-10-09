@@ -13,7 +13,7 @@ from sklearn.kernel_ridge import KernelRidge
 def main():
     water_dipa_nacl, water_dipa, water_nacl = import_training_set()
 
-    lbounds = (900, 2000)  # set global bounds on wavelength
+    lbounds = (900, 2500)  # set global bounds on wavelength
 
     mix_train = water_dipa + water_nacl
     mix_test = water_dipa_nacl.filter({'nacl': [10 ** -5, 1], 'dipa': [10 ** -5, 1]})

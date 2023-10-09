@@ -13,6 +13,8 @@ class Mixture:
     """
     A container for your test (or test/train) data for a system of interest. Individual samples in this dataset can be
     loaded as samples.
+
+
     Contains an xarray DataArray with dims 'l' for wavelength and N different dims corresponding to the different
     chemicals in the mixture.
 
@@ -20,6 +22,14 @@ class Mixture:
     samples is the full list of samples that you wish to include in your training or test/train dataset. All *samples
     must have the same dims. Handling of duplicates, i.e. ones with the same composition (and therefore same coords) is
     done by adding a random number scaled by 10**(-9).
+
+    self.chem_properties: dict.
+    The chem_properties dict contains information about the chemicals in this Mixture.
+
+    The Mixture class describes all possible mixtures of two or more chemicals. For instance, if you are interested in
+    studying the ethanol-water mixture, you might define a Mixture called etoh_h2o. This would contain a list of samples
+    each with different amounts of ethanol and water. A particular ethanol-water mixture, for example the equimolar
+    mixture of the two, would be described by a mixture_composition_regression.Sample object.
 
     """
 
@@ -61,6 +71,7 @@ class Mixture:
             self.da = da.sortby(['l'])
         else:
             self.da = da
+
         self.chem_properties = samples[0].chem_properties
         self.samples = samples
         return
@@ -136,6 +147,11 @@ class Mixture:
         return
 
     def filter(self, criteria):
+        """
+
+        :param criteria: dict
+        :return:
+        """
 
         # check crits
         if isinstance(criteria, dict):

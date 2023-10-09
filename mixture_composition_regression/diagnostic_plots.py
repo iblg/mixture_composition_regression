@@ -7,10 +7,39 @@ import numpy as np
 def plot_learning_curve(model,
                         y,
                         X,
-                        train_sizes=np.arange(5, 21),
-                        cv=5,
-                        scoring='neg_mean_absolute_error',
-                        savefile=None):
+                        train_sizes = np.arange(5, 21),
+                        cv: int = 5,
+                        scoring: str = 'neg_mean_absolute_error',
+                        filepath: str = None,
+                        display: bool = False):
+    """
+    Plots the learning curve of a selected model.
+
+    :param model:
+    The model object to evaluate.
+
+    :param y:
+    The target variable data.
+
+    :param X:
+    The dependent variable data.
+
+    :param train_sizes: list or array-like.
+    The list of size data to use for the training set size.
+
+    :param cv: int, default 5
+    The number of folds to do in cross validation.
+
+    :param scoring: str
+
+    :param filepath: str
+    Filepath to save
+
+    :param display: bool, default False
+    If True, display the plot.
+
+    :return:
+    """
     train_sizes, train_scores, valid_scores = learning_curve(
         model, X, y, train_sizes=train_sizes, cv=cv,
         scoring=scoring
@@ -32,12 +61,13 @@ def plot_learning_curve(model,
     ax.set_xlabel('Number of training data')
     ax.set_ylabel(scoring)
 
-    plt.show()
-    if savefile is None:
+    if display:
+        plt.show()
+
+    if filepath is None:
         pass
     else:
-        plt.savefig(savefile + '.png', dpi=400)
-
+        plt.savefig(filepath + '.png', dpi=400)
     return
 
 
@@ -49,7 +79,8 @@ def plot_validation_curve(model,
                           log_y: bool = False,
                           scoring: str = 'neg_mean_absolute_error',
                           cv: int = 5,
-                          savefile: str = None):
+                          filepath: str = None,
+                          display: bool = False):
     for key, val in param.items():
         param_name = key
         param_range = val
@@ -64,7 +95,7 @@ def plot_validation_curve(model,
     train_scores = np.array(train_scores)
     valid_scores = np.array(valid_scores)
     if log_y:
-        train_scores, valid_scores = np.abs(train_scores), np.abs(valid_scores) # This is some pretty dodgy work.
+        train_scores, valid_scores = np.abs(train_scores), np.abs(valid_scores)  # This is some pretty dodgy work.
     ax.errorbar(param_range, train_scores.mean(axis=1), yerr=train_scores.std(axis=1), label='Training scores')
     ax.errorbar(param_range, valid_scores.mean(axis=1), yerr=valid_scores.std(axis=1), label='Validation scores')
     print(param_range)
@@ -80,14 +111,15 @@ def plot_validation_curve(model,
         ax.set_yscale('log')
         ax.set_ylabel('Absolute val of ' + scoring)
 
-
     plt.legend()
-    plt.show()
 
-    if savefile is None:
+    if display:
+        plt.show()
+
+    if filepath is None:
         pass
     else:
-        fig.savefig(savefile + param_name +'.png', dpi=400)
+        fig.savefig(filepath + param_name + '.png', dpi=400)
 
     return
 
@@ -102,7 +134,7 @@ def plot_validation_curve_over_param_grid(model,
                                           cv: int = 5,
                                           savefile: str = None):
     for key, val in param_grid.items():
-        plot_validation_curve(model, y, X, param={key: val},
-                              log_x=log_x, log_y=log_y, scoring=scoring, cv=cv, savefile=savefile)
+        plot_validation_curve(model, y, X, param={key: val}, log_x=log_x, log_y=log_y, scoring=scoring, cv=cv,
+                              filepath=savefile)
 
     return

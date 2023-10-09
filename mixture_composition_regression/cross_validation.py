@@ -1,15 +1,13 @@
 import sklearn
 from sklearn.model_selection import train_test_split
 
-
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import mean_absolute_percentage_error
 
-
 import mixture_composition_regression.mixture
 
-from mixture_composition_regression.preprocessor_pipeline import get_Xy
+from mixture_composition_regression.preprocessor_pipeline import get_Xy_2
 from mixture_composition_regression.preprocessor_pipeline import plot_metric
 
 import numpy as np
@@ -28,6 +26,53 @@ def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture
                                test_data: mixture_composition_regression.mixture.Mixture = None,
                                plot_comparison: bool = False,
                                plot_comparison_savefile: str = None):
+    """
+
+    :param m: mixture_composition_regression.mixture.Mixture object
+    The mixture used to train and test the dataset.
+
+    :param nwindows: list
+    List of ints. The number of wavelength (or frequency) subdivisions to use when dividing up training spectra in this
+    cross-validation search.
+
+    :param models: list
+    List of models to use in cross validation search.
+
+    :param l_bounds: list
+    The wavelength (or frequency) bounds on the total data.
+
+    :param target_chem:
+
+    :param tts_test_size:
+
+    :param tts_random_state:
+
+    :param tolerance:
+
+    :param metric: sklearn.metrics function
+    Metric used for goodness of fit.
+    List of metrics can be found at scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics
+
+    :param metric_label: str
+    Text label used for printing results of the goodness of fit metric.
+
+    :param test_data:
+
+    :param plot_comparison: bool, default False
+    If False, no plot is made comparing
+
+    :param plot_comparison_savefile:
+    :return:
+    """
+    print('in cv_and_wavel')
+    for x in nwindows:  # check nwindows
+        if isinstance(x, int):
+            pass
+        else:
+            print('Number of window subdividions in cv_on_model_and_wavelength is not an integer value!')
+            print('Please ensure that nwindows is a list of ints.')
+            return
+
     if metric is None:
         metric = mean_squared_error
     else:
@@ -80,7 +125,7 @@ def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture
     if plot_comparison is False:
         pass
     else:  # if we do want to plot a comparison between real and predicted values,
-        if test_data is None: # we get the X,y data using either test-train split or specified values
+        if test_data is None:  # we get the X,y data using either test-train split or specified values
             y, X = get_Xy_2(m, lbounds=best_model[1], target_chem=target_chem)
             X_train, X_test, y_train, y_test = train_test_split(X, y,
                                                                 test_size=tts_test_size, random_state=tts_random_state)
@@ -93,32 +138,65 @@ def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture
         metric_test = metric(y_test, y_pred)
 
         plot_metric(y_test, y_train, y_pred, metric_label, metric_test, metric_train,
-                    savefile=plot_comparison_savefile + metric_label, wl_window=best_model[1], display=True)
+                    filepath=plot_comparison_savefile + metric_label, wl_window=best_model[1], display=True)
 
-    best_y, best_X = get_Xy(m, lbounds=best_model[1], ycol=ycol)
+    best_y, best_X = get_Xy_2(m, lbounds=best_model[1], target_chem=target_chem)
     return viable_models, best_model, best_y, best_X
 
 
-def get_window_list(start: float, end: float, nwindows: list = None, width: float = None):
-    if (nwindows is None) and (width is None):
+def get_window_list(start: float,
+                    end: float,
+                    nwindows: list = None,
+                    width: float = None,
+                    print_windows: bool = False):
+    """
+    Returns a list of wavelength (or frequency) intervals that demarcate fitting intervals for the model to train on.
+
+    :param start: float
+    The minimum wavelength (or frequency) considered by the model.
+
+    :param end: float
+    The maximum wavelength (or frequency) considered by the model.
+
+    :param nwindows: int
+    The number of windows to divide the wavelength (or frequency) interval into.
+    Note: only nwindows OR width should be provided. Not both.
+
+    :param width: float
+    The width of each wavelength (or frequency) interval.
+    Note: only nwindows OR width should be provided. Not both.
+
+    :param print_windows: bool, default False
+    If print_windows is True, the list of windows generated will get printed.
+
+    :return:
+    """
+    if nwindows:  # if nwindows is passed
+        if type(nwindows) is int:  # check that nwindows is correct type
+            pass
+        else:
+            print('nwindows is not an int. get_window_list will fail.')
+            return
+
+    if (nwindows is None) and (width is None):  # if neither nwindows nor width is provided
         print('nwindows or width must be specified.')
         print('A default of 1 window has been applied')
         nwindows = 1
-
-    # get nwindows if width is provided
-    if nwindows is None:
+    elif (nwindows is None) and (width is not None):  # get nwindows if width is provided
         nwindows = int((end - start) / width)
-    else:  # if nwindows is provided
-        # check nwindows is int
-        if type(nwindows) is int:
-            pass
-        else:
-            print('nwindows is not an int.')
-
+    elif (nwindows is not None) and width is None:  # if nwindows is not none
         width = int((end - start) / nwindows)
+    elif nwindows and width:
+        print('Both nwindows and width provided.')
+        print('get_window_list will revert to nwindows and ignore width.')
+
 
     starts = np.linspace(start, end - width, nwindows).reshape((-1, 1))
     ends = np.linspace(start + width, end, nwindows).reshape((-1, 1))
 
     windows = np.concatenate((starts, ends), axis=1)
+
+    if print_windows:
+        print(windows)
+
     return windows

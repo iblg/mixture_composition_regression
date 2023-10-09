@@ -60,7 +60,9 @@ class Sample:
         self.name = name
 
         self.l = data.iloc[:, l_col_idx]
-        self.a = pd.Series(data.iloc[:, data_col_idx], index=self.l).sort_index()
+        self.a = pd.DataFrame(data.iloc[:, np.c_[l_col_idx, data_col_idx]])
+        # self.a = pd.DataFrame(data.iloc[:, data_col_idx])
+        self.a = self.a.set_index(self.a.iloc[:, 0]).sort_index()
         # self.la = np.concat(self.l, self.a, axis = 'columns')
         self.chem_properties = chem_properties
 
@@ -197,7 +199,6 @@ def main():
           'mw': [18.015, 101.19, 58.44],
           'nu': [1, 1, 2]}
     s1 = Sample('water', df, 0, 1, chem_properties=cp, w=[1, 0, 0])
-    print(s1.w)
 
     return
 

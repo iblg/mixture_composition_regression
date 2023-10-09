@@ -34,14 +34,14 @@ def get_2023_04_06(m_sol, m_water):
     return [w_water, w_dipa, w_nacl]
 
 
-def import_training_set():
+def load_training_set(filepaths = [None, None, None]):
     cp = {'name': ['water', 'dipa', 'nacl'],
           'mw': [18.015, 101.19, 58.44],
           'nu': [1, 1, 2]}
 
     # 03-03-2023 data
     file = '/Users/ianbillinge/Documents/yiplab/projects/ir/data/1mm_pl/2023-03-03/2023-03-03.csv'
-    df = clean_data(file)
+    df = clean_data(file, dropna='all')
 
     back = Sample('background', df, 0, 1, chem_properties=cp, w=[1, 0, 0])
     water1 = Sample('water1', df, 2, 3, chem_properties=cp, w=[1., 0., 0.], background=back)
@@ -49,7 +49,7 @@ def import_training_set():
 
     # 03-07-2023 data
     file = '/Users/ianbillinge/Documents/yiplab/projects/ir/data/1mm_pl/2023-03-07/2023-03-07.csv'
-    df = clean_data(file)
+    df = clean_data(file, dropna='all')
 
     back = Sample('background', df, 0, 1, chem_properties=cp, w=[1, 0, 0])
     water2 = Sample('water2', df, 2, 3, chem_properties=cp, w=[1., 0., 0.], background=back)
@@ -61,7 +61,7 @@ def import_training_set():
 
     # 03-09-2023
     file = '/Users/ianbillinge/Documents/yiplab/projects/ir/data/1mm_pl/2023-03-09/2023-03-09.csv'
-    df = clean_data(file)
+    df = clean_data(file, dropna='all')
 
     # no background taken on this date.
     dipa_w1a = Sample('dipa_w1a', df, 0, 1, chem_properties=cp,
@@ -75,7 +75,7 @@ def import_training_set():
 
     # # 03-22-2023 data
     file = '/Users/ianbillinge/Documents/yiplab/projects/ir/data/1mm_pl/2023-03-22/2023-03-22.csv'
-    df = clean_data(file)
+    df = clean_data(file, dropna='all')
 
     # no background taken on this date.
     water3 = Sample('water3', df, 2, 3, chem_properties=cp, w=[1., 0., 0.], background=back)
@@ -88,7 +88,7 @@ def import_training_set():
 
     # 03-30-2023 data
     file = '/Users/ianbillinge/Documents/yiplab/projects/ir/data/1mm_pl/2023-03-30/2023-03-30.csv'
-    df = clean_data(file)
+    df = clean_data(file, dropna='all')
 
     back = Sample('background', df, 0, 1, chem_properties=cp, w=[1, 0, 0])
 
@@ -114,7 +114,7 @@ def import_training_set():
                          background=back)
 
     file = '/Users/ianbillinge/Documents/yiplab/projects/ir/data/1mm_pl/2023-04-04/2023-04-04.csv'
-    df = clean_data(file)
+    df = clean_data(file, dropna='all')
     back = Sample('background', df, 0, 1, chem_properties=cp, w=[1, 0, 0])
 
     s7 = Sample('water_dipa_nacl_s7', df, 10, 11, chem_properties=cp, w=get_003_w(0.4246, 0.9616), background=back)
@@ -126,16 +126,16 @@ def import_training_set():
 
     # 2023-04-06
     file = '/Users/ianbillinge/Documents/yiplab/projects/ir/data/1mm_pl/2023-04-06/2023-04-06.csv'
-    df = clean_data(file)
+    df = clean_data(file, dropna='all')
     back = Sample('background', df, 0, 1, chem_properties=cp, w=[1, 0, 0])
     a2 = Sample('a2', df, 2, 3, chem_properties=cp, w=get_2023_04_06(3.8376, 2.7831), background=back)
-    irina = Sample('irina', df, 4, 5, chem_properties=cp, w=get_2023_04_06(2.7387, 10.5606), background=back)
+    a2a = Sample('a2a', df, 4, 5, chem_properties=cp, w=get_2023_04_06(2.7387, 10.5606), background=back)
     a3 = Sample('a3', df, 8, 9, chem_properties=cp, w=get_2023_04_06(3.3168, 1.9031), background=back)
     a4 = Sample('a4', df, 6, 7, chem_properties=cp, w=get_2023_04_06(1., 0.), background=back)
 
     # 2023-04-10
     file = '/Users/ianbillinge/Documents/yiplab/projects/ir/data/1mm_pl/2023-04-10/2023-04-10.csv'
-    df = clean_data(file)
+    df = clean_data(file, dropna='all')
     back = Sample('background', df, 0, 1, chem_properties=cp, w=[1, 0, 0])
     s11a = Sample('s11a', df, 4, 5, chem_properties=cp, w=[6.9871 / (6.9871 + 0.0068), 0.0068 / (6.9871 + 0.0068), 0], background=back)
     s12a = Sample('s12a', df, 2, 3, chem_properties=cp, w=[7.2492 / (7.2492 + 0.0179), 0.0179 / (7.2492 + 0.0179), 0], background=back)
@@ -151,14 +151,17 @@ def import_training_set():
                           s11a, s12a, s13, s14, s15, s16
                         ],
                          name='water_dipa')
-    water_dipa.savefile('water_dipa.nc', mode='w')
+    if filepaths[0] is not None:
+        water_dipa.savefile(filepaths[0] + '.nc', mode='w')
 
     water_nacl = Mixture([water1, water2,
                           water3, five_M, five_M_2, two_M, two_M_2, four_M, four_M_2,
-                          a2, irina, a3, a4
+                          a2, a2a, a3, a4
                           ],
                          name='water_nacl')
-    water_nacl.savefile('water_nacl.nc', mode='w')
+
+    if filepaths[1] is not None:
+        water_nacl.savefile(filepaths[1] + '.nc', mode='w')
 
     all_3 = Mixture([nacl_005_1a, nacl_005_1b, nacl_005_2a,
                                                          nacl_005_2b,
@@ -166,10 +169,13 @@ def import_training_set():
                                                          nacl_005_5b, nacl_005_6a, nacl_005_6b,
                                                          s7, s8, s9, s10, s11, s12],
                                                         name = 'all_three')
-    all_3.savefile('all_3.nc', mode='w')
+    if filepaths[2] is not None:
+        all_3.savefile(filepaths[2] + '.nc', mode='w')
 
     water_dipa_nacl = water_dipa + water_nacl + all_3
     water_dipa_nacl = water_dipa_nacl.set_name('water_dipa_nacl')
-    water_dipa_nacl.savefile('water_dipa_nacl.nc', mode='w')
+
+    if filepaths[3] is not None:
+        water_dipa_nacl.savefile(filepaths[3] + '.nc', mode='w')
 
     return water_dipa_nacl, water_dipa, water_nacl
