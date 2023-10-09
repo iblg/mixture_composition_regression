@@ -86,7 +86,7 @@ def cv_on_model_and_wavelength(m: mixture_composition_regression.mixture.Mixture
         if l_bounds:
             pass
         else:
-            l_bounds = (min(m.samples[0].l), max(m.samples[0].l))
+            l_bounds = (min(m.samples[0].x), max(m.samples[0].x))
 
         wl = get_window_list(l_bounds[0], l_bounds[1], nwindows=n)
 

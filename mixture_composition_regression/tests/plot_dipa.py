@@ -15,7 +15,7 @@ def main():
     fig, ax = dipa1.plot(savefile='dipa', log_y=True)
     # water1.plot(savefile='water', log_y=True, fig=fig, ax=ax)
     water1.plot(savefile='water', log_y=False)
-    print(pd.concat([water1.l, water1.a], axis='columns'))
+    print(pd.concat([water1.x, water1.a], axis='columns'))
 
 
     return

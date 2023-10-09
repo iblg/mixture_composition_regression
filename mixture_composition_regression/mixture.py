@@ -15,7 +15,7 @@ class Mixture:
     loaded as samples.
 
 
-    Contains an xarray DataArray with dims 'l' for wavelength and N different dims corresponding to the different
+    Contains an xarray DataArray with dims 'x' for wavelength and N different dims corresponding to the different
     chemicals in the mixture.
 
     samples : list of mixture_composition_regression.Sample objects
@@ -50,7 +50,7 @@ class Mixture:
         savefile_mode :
         """
         self.name = name
-        coordinates = [i for i in samples[0].da.coords][1:]  # get list of coordinates except for l.
+        coordinates = [i for i in samples[0].da.coords][1:]  # get list of coordinates except for x.
         print('Checking samples in mixture {}'.format(self.name))
         samples = _check_samples(samples)  # check the samples for uniqueness etc.
 
@@ -68,7 +68,7 @@ class Mixture:
 
         da = xr.concat(da_list, dim='name')
         if sort_da_by_l:
-            self.da = da.sortby(['l'])
+            self.da = da.sortby(['x'])
         else:
             self.da = da
 
@@ -79,7 +79,7 @@ class Mixture:
     def __add__(self, other):
         _check_chem_properties(self, other)
         # self.da = xr.concat([self.da, other.da], dim='name')
-        # self.da = self.da.sortby(['l'], ascending=True)
+        # self.da = self.da.sortby(['x'], ascending=True)
         [self.samples.append(s) for s in other.samples]
         mix = Mixture(self.samples, attrs=self.attrs)
         return mix
@@ -102,7 +102,7 @@ class Mixture:
                 spect_bounds=None,
                 xlabel='Wavelength [nm]',
                 ylabel='Absorption [–]',
-                stylesheet=None
+                stylesheet=None,
                 ):
         if stylesheet is None:
             pass
@@ -117,7 +117,6 @@ class Mixture:
         # for s in self.samples:
         #     x.append(s.w[idx])
         x = [s.w[idx] for s in self.samples]
-
         sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=min(x), vmax=max(x)))
         plt.colorbar(sm, ax=ax)
 
@@ -127,12 +126,12 @@ class Mixture:
         for s in self.samples:
             c = s.w[idx]
             if spect_bounds is None:
-                l, a = s.l, s.a
+                l, a = s.x, s.a
             else:
-                l = s.l.where((s.l > spect_bounds[0]))
-                a = s.a.where((s.l > spect_bounds[0]))
-                l = l.where((s.l < spect_bounds[1]))
-                a = a.where((s.l < spect_bounds[1]))
+                l = s.x.where((s.x > spect_bounds[0]))
+                a = s.a.where((s.x > spect_bounds[0]))
+                l = l.where((s.x < spect_bounds[1]))
+                a = a.where((s.x < spect_bounds[1]))
             ax.plot(l, a, color=cmap(c), alpha=alpha)
 
         # plt.colorbar(ax, cax=cbar)

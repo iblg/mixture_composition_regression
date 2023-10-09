@@ -21,7 +21,7 @@ def get_chemlist(da):
     :return: chems
     """
     chems = da.coords
-    del chems['l']
+    del chems['x']
     del chems['name']
     return chems
 
@@ -49,15 +49,15 @@ def get_Xy(m, lbounds, ycol=None):
 
     da = m.da
 
-    bds = (da.l.values > lbounds[0]) & (da.l.values < lbounds[1])
-    da = da.where(bds).dropna(dim='l')
+    bds = (da.x.values > lbounds[0]) & (da.x.values < lbounds[1])
+    da = da.where(bds).dropna(dim='x')
 
     # get list of chemicals in the mixture
     chems = get_chemlist(da)
 
     first = 0
     for i in da.coords['name'].values:
-        selection = da.sel({'name': i}).dropna(dim='l', how='all')
+        selection = da.sel({'name': i}).dropna(dim='x', how='all')
 
         first_chem = 0
         for chem in chems:  # get the composition of the mixture.
