@@ -41,7 +41,7 @@ def load_training_set(filepaths = [None, None, None]):
 
     # 03-03-2023 data
     file = '/Users/ianbillinge/Documents/yiplab/projects/ir/data/1mm_pl/2023-03-03/2023-03-03.csv'
-    df = clean_data(file)
+    df = clean_data(file, dropna='all')
 
     back = Sample('background', df, 0, 1, chem_properties=cp, w=[1, 0, 0])
     water1 = Sample('water1', df, 2, 3, chem_properties=cp, w=[1., 0., 0.], background=back)
@@ -49,7 +49,7 @@ def load_training_set(filepaths = [None, None, None]):
 
     # 03-07-2023 data
     file = '/Users/ianbillinge/Documents/yiplab/projects/ir/data/1mm_pl/2023-03-07/2023-03-07.csv'
-    df = clean_data(file)
+    df = clean_data(file, dropna='all')
 
     back = Sample('background', df, 0, 1, chem_properties=cp, w=[1, 0, 0])
     water2 = Sample('water2', df, 2, 3, chem_properties=cp, w=[1., 0., 0.], background=back)
@@ -61,7 +61,7 @@ def load_training_set(filepaths = [None, None, None]):
 
     # 03-09-2023
     file = '/Users/ianbillinge/Documents/yiplab/projects/ir/data/1mm_pl/2023-03-09/2023-03-09.csv'
-    df = clean_data(file)
+    df = clean_data(file, dropna='all')
 
     # no background taken on this date.
     dipa_w1a = Sample('dipa_w1a', df, 0, 1, chem_properties=cp,
@@ -75,7 +75,7 @@ def load_training_set(filepaths = [None, None, None]):
 
     # # 03-22-2023 data
     file = '/Users/ianbillinge/Documents/yiplab/projects/ir/data/1mm_pl/2023-03-22/2023-03-22.csv'
-    df = clean_data(file)
+    df = clean_data(file, dropna='all')
 
     # no background taken on this date.
     water3 = Sample('water3', df, 2, 3, chem_properties=cp, w=[1., 0., 0.], background=back)
@@ -88,7 +88,7 @@ def load_training_set(filepaths = [None, None, None]):
 
     # 03-30-2023 data
     file = '/Users/ianbillinge/Documents/yiplab/projects/ir/data/1mm_pl/2023-03-30/2023-03-30.csv'
-    df = clean_data(file)
+    df = clean_data(file, dropna='all')
 
     back = Sample('background', df, 0, 1, chem_properties=cp, w=[1, 0, 0])
 
@@ -114,7 +114,7 @@ def load_training_set(filepaths = [None, None, None]):
                          background=back)
 
     file = '/Users/ianbillinge/Documents/yiplab/projects/ir/data/1mm_pl/2023-04-04/2023-04-04.csv'
-    df = clean_data(file)
+    df = clean_data(file, dropna='all')
     back = Sample('background', df, 0, 1, chem_properties=cp, w=[1, 0, 0])
 
     s7 = Sample('water_dipa_nacl_s7', df, 10, 11, chem_properties=cp, w=get_003_w(0.4246, 0.9616), background=back)
@@ -126,7 +126,7 @@ def load_training_set(filepaths = [None, None, None]):
 
     # 2023-04-06
     file = '/Users/ianbillinge/Documents/yiplab/projects/ir/data/1mm_pl/2023-04-06/2023-04-06.csv'
-    df = clean_data(file)
+    df = clean_data(file, dropna='all')
     back = Sample('background', df, 0, 1, chem_properties=cp, w=[1, 0, 0])
     a2 = Sample('a2', df, 2, 3, chem_properties=cp, w=get_2023_04_06(3.8376, 2.7831), background=back)
     a2a = Sample('a2a', df, 4, 5, chem_properties=cp, w=get_2023_04_06(2.7387, 10.5606), background=back)
@@ -135,7 +135,7 @@ def load_training_set(filepaths = [None, None, None]):
 
     # 2023-04-10
     file = '/Users/ianbillinge/Documents/yiplab/projects/ir/data/1mm_pl/2023-04-10/2023-04-10.csv'
-    df = clean_data(file)
+    df = clean_data(file, dropna='all')
     back = Sample('background', df, 0, 1, chem_properties=cp, w=[1, 0, 0])
     s11a = Sample('s11a', df, 4, 5, chem_properties=cp, w=[6.9871 / (6.9871 + 0.0068), 0.0068 / (6.9871 + 0.0068), 0], background=back)
     s12a = Sample('s12a', df, 2, 3, chem_properties=cp, w=[7.2492 / (7.2492 + 0.0179), 0.0179 / (7.2492 + 0.0179), 0], background=back)

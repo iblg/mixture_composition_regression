@@ -22,7 +22,7 @@ def main():
 
     mae_train = median_absolute_error(y_train, model.predict(X_train))
     mae_test = median_absolute_error(y_test, y_pred)
-    plot_metric(y_test, y_train, y_pred, mae_test, mae_train)
+    plot_metric(y_test, y_train, y_pred, mae_test, mae_train, )
 
     return
 
