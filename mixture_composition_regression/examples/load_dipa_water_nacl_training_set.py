@@ -137,12 +137,19 @@ def load_training_set(filepaths = [None, None, None]):
     file = '/Users/ianbillinge/Documents/yiplab/projects/ir/data/1mm_pl/2023-04-10/2023-04-10.csv'
     df = clean_data(file, dropna='all')
     back = Sample('background', df, 0, 1, chem_properties=cp, w=[1, 0, 0])
-    s11a = Sample('s11a', df, 4, 5, chem_properties=cp, w=[6.9871 / (6.9871 + 0.0068), 0.0068 / (6.9871 + 0.0068), 0], background=back)
-    s12a = Sample('s12a', df, 2, 3, chem_properties=cp, w=[7.2492 / (7.2492 + 0.0179), 0.0179 / (7.2492 + 0.0179), 0], background=back)
-    s13 = Sample('s13', df, 6, 7, chem_properties=cp, w=[6.1994 / (6.1994 + 0.0211), 0.0211 / (6.1994 + 0.0211), 0], background=back)
-    s14 = Sample('s14', df, 8, 9, chem_properties=cp, w=[5.9043 / (5.9043 + 0.0114), 0.0114 / (5.9043 + 0.0114), 0], background=back)
-    s15 = Sample('s15', df, 10, 11, chem_properties=cp, w=[5.0079 / (5.0079 + 0.0098), 0.0098 / (5.0079 + 0.0098), 0], background=back)
-    s16 = Sample('s16', df, 12, 13, chem_properties=cp, w=[(5.4557 + 17.3049) / (5.4557 + 17.3049 + 0.0337), 0.0337 / (5.4557 + 17.3049 + 0.0337), 0], background=back)
+    s11a = Sample('s11a', df, 4, 5, chem_properties=cp, w=[6.9871 / (6.9871 + 0.0068), 0.0068 / (6.9871 + 0.0068), 0],
+                  background=back)
+    s12a = Sample('s12a', df, 2, 3, chem_properties=cp, w=[7.2492 / (7.2492 + 0.0179), 0.0179 / (7.2492 + 0.0179), 0],
+                  background=back)
+    s13 = Sample('s13', df, 6, 7, chem_properties=cp, w=[6.1994 / (6.1994 + 0.0211), 0.0211 / (6.1994 + 0.0211), 0],
+                 background=back)
+    s14 = Sample('s14', df, 8, 9, chem_properties=cp, w=[5.9043 / (5.9043 + 0.0114), 0.0114 / (5.9043 + 0.0114), 0],
+                 background=back)
+    s15 = Sample('s15', df, 10, 11, chem_properties=cp, w=[5.0079 / (5.0079 + 0.0098), 0.0098 / (5.0079 + 0.0098), 0],
+                 background=back)
+    s16 = Sample('s16', df, 12, 13, chem_properties=cp,
+                 w=[(5.4557 + 17.3049) / (5.4557 + 17.3049 + 0.0337), 0.0337 / (5.4557 + 17.3049 + 0.0337), 0],
+                 background=back)
 
 
     water_dipa = Mixture([water1, dipa1, water2,
