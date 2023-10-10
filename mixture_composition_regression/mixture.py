@@ -102,6 +102,7 @@ class Mixture:
                 spect_bounds=None,
                 xlabel='Wavelength [nm]',
                 ylabel='Absorption [–]',
+                cbarlabel = None,
                 stylesheet=None,
                 ):
         if stylesheet is None:
@@ -118,7 +119,8 @@ class Mixture:
         #     x.append(s.w[idx])
         x = [s.w[idx] for s in self.samples]
         sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=min(x), vmax=max(x)))
-        plt.colorbar(sm, ax=ax)
+        cc = plt.colorbar(sm, ax=ax)
+        cc.set_label(cbarlabel, rotation=270.)
 
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
