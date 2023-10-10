@@ -6,6 +6,7 @@ from mixture_composition_regression.sample import Sample
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 from matplotlib import cm
+from numpy.random import random
 from itertools import count
 
 
@@ -174,6 +175,33 @@ class Mixture:
         m = Mixture(m, attrs=self.attrs)
 
         return m
+
+    def random_tts(self, test_fraction, random_seed=None):
+        """
+
+        :param criteria: dict
+        :return:
+        """
+        train_fraction = 1. - test_fraction
+        nsamples = self.da.coords['name'].shape[0]
+        train_size = int(nsamples*train_fraction)   
+        rng = np.random.default_rng(seed=random_seed)
+
+        train_samples = rng.choice(self.da.coords['name'].values, train_size, replace=False,)
+
+        train = self.da
+        test = self.da
+
+        for s in self.da.coords['name'].values:
+            if s in train_samples:
+                test = test.drop_sel(name=s).dropna('name', how = 'all')
+            else:
+                train = train.drop_sel(name=s).dropna('name', how = 'all')
+        # train_samples = np.random.choice( )
+        #
+
+
+        return train, test
 
 
 def _check_samples(samples):

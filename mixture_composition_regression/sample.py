@@ -127,11 +127,10 @@ class Sample:
             a = data.iloc[:, a_col_idx]
 
             xa = pd.DataFrame([x, a], columns=['x', 'a'])
-            print('xa: {}'.format(xa))
+            # print('xa: {}'.format(xa))
         else:
             print('Problems finding correct columns for sample {}'.format(self.name))
             return
-        print(xa)
         if xbounds:
             xa = xa[xa['x'] > xbounds[0]]
 
