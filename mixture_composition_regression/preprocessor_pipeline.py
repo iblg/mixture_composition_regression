@@ -7,6 +7,7 @@ from sklearn.metrics import PredictionErrorDisplay
 from sklearn.metrics import median_absolute_error
 from sklearn.linear_model import Ridge
 
+from mixture_composition_regression.mixture import Mixture
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -26,18 +27,21 @@ def get_chemlist(da):
     return chems
 
 
-def get_Xy(m, lbounds, ycol=None):
+def get_Xy(ds, target_species, training_data = None, xbounds=None):
     """
-    Processes a mixture to get X (data), y (target variable) information to send to the model.
+    Processes a Dataset to get X (data), y (target variable) information to send to the model.
 
-    :param m: Mixture object
-    The mixture object that will be used to develop a model.
+    :param m: Xarray.Dataset object
+    The Dataset object that contains the training and target information.
 
     :param lbounds: tuple, default (900, 3200).
     The lower and upper bounds on the wavelength.
 
-    :param ycol: int
+    :param target_species_index: int, optional
     The column index for the target variable
+
+    :param target_species: str
+    The target species name.
 
     :return:
     :param y: numpy Array
@@ -46,49 +50,48 @@ def get_Xy(m, lbounds, ycol=None):
     Contains the training variables.
 
     """
-
-    da = m.da
-
-    bds = (da.x.values > lbounds[0]) & (da.x.values < lbounds[1])
-    da = da.where(bds).dropna(dim='x')
-
-    # get list of chemicals in the mixture
-    chems = get_chemlist(da)
-
-    first = 0
-    for i in da.coords['name'].values:
-        selection = da.sel({'name': i}).dropna(dim='x', how='all')
-
-        first_chem = 0
-        for chem in chems:  # get the composition of the mixture.
-            if first_chem == 0:
-                composition = selection.coords[chem]
-                first_chem += 1
-            else:
-                composition = np.append(composition, selection.coords[chem].values)
-
-        x = selection.values.reshape(-1, 1)
-        x = pd.DataFrame(x, )
-
-        composition = composition.reshape(-1, 1)
-
-        if first == 0:
-            X = x
-            y = composition
-            first += 1
-        else:
-            X = np.append(X, x, axis=1)
-            y = np.append(y, composition, axis=1)
-
-    if ycol is None:
-        pass
+    if xbounds:
+        bds = (ds.x.values > xbounds[0]) & (ds.x.values < xbounds[1])
+        da = ds.where(bds).dropna(dim='x')
     else:
-        y = y[:, ycol]
+        pass
+
+    y = ds.coords[target_species].values
+    # X = ds[training_data].dropna("name", how="all").values
+    # first = 0
+    # for i in da.coords['name'].values:
+    #     selection = da.sel({'name': i}).dropna(dim='x', how='all')
+    #
+    #     first_chem = 0
+    #     for chem in chems:  # get the composition of the mixture.
+    #         if first_chem == 0:
+    #             composition = selection.coords[chem]
+    #             first_chem += 1
+    #         else:
+    #             composition = np.append(composition, selection.coords[chem].values)
+    #
+    #     x = selection.values.reshape(-1, 1)
+    #     x = pd.DataFrame(x, )
+    #
+    #     composition = composition.reshape(-1, 1)
+    #
+    #     if first == 0:
+    #         X = x
+    #         y = composition
+    #         first += 1
+    #     else:
+    #         X = np.append(X, x, axis=1)
+    #         y = np.append(y, composition, axis=1)
+    #
+    # if ycol is None:
+    #     pass
+    # else:
+    #     y = y[:, ycol]
 
     return y, X
 
 
-def get_Xy_2(m, lbounds, target_chem=None):
+def get_Xy_2(m: Mixture, lbounds, target_chem=None):
     """
     Processes a mixture to get X, the dependent variables, and y, the target variable. Returns y, X.
 
@@ -161,6 +164,9 @@ def get_pipeline(preprocessor, regr=None, func=None, inverse_func=None):
 
     :return:
     """
+    if regr is None:
+        regr = Ridge(alpha=1e-8)
+        print('No regressor has been provided. The regressor has been set to Ridge Regression.')
 
     # check some edge cases
     if func and inverse_func:
@@ -171,9 +177,6 @@ def get_pipeline(preprocessor, regr=None, func=None, inverse_func=None):
         print('No inverse_func provided to get_pipeline')
     elif not func:
         print('No func provided to get_pipeline; inverse_func provided.')
-
-    if regr is None:
-        regr = Ridge(alpha=1e-8)
 
     if func is None:
         f = identity

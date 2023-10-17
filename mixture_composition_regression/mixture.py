@@ -95,7 +95,8 @@ class Mixture:
         self.da.to_netcdf(savefile, mode=mode)
         return
 
-    def plot_by(self, idx=0,
+    def plot_by(self, 
+                idx=0,
                 cmap_name='cividis',
                 savefig=None,
                 alpha=1,
@@ -184,7 +185,7 @@ class Mixture:
         """
         train_fraction = 1. - test_fraction
         nsamples = self.da.coords['name'].shape[0]
-        train_size = int(nsamples*train_fraction)   
+        train_size = int(nsamples*train_fraction)
         rng = np.random.default_rng(seed=random_seed)
 
         train_samples = rng.choice(self.da.coords['name'].values, train_size, replace=False,)
@@ -199,6 +200,8 @@ class Mixture:
                 train = train.drop_sel(name=s).dropna('name', how = 'all')
         # train_samples = np.random.choice( )
         #
+        # test = Mixture(test)
+        # train = Mixture(train)
 
 
         return train, test
