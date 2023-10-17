@@ -14,7 +14,7 @@ class Sample:
                  w=None,
                  savefile=None,
                  w_tol=10 ** (-4.),
-
+                 xbounds=None,
                  background=None):
         """
         Class for a single sample.
@@ -65,7 +65,7 @@ class Sample:
         self.wa = None
         self.name = name
 
-        self.x, self.a = self.get_x_a(data, x_col_idx, a_col_idx, x_col_name, a_col_name)
+        self.x, self.a = self.get_x_a(data, x_col_idx, a_col_idx, x_col_name, a_col_name, xbounds)
 
         # self.x = data.iloc[:, x_col_idx]
         # self.a = pd.DataFrame(data.iloc[:, np.c_[x_col_idx, data_col_idx]])
@@ -91,6 +91,9 @@ class Sample:
             composition.append(w[idx])
             da = da.assign_coords({chem: ("name", [w[idx]])})
         self.da = da
+        self.diff = self.da.diff('x')
+        self.diff2 = self.da.diff('x', n=2)
+
 
         if savefile:
             self.savefile = savefile
@@ -109,30 +112,31 @@ class Sample:
             w = w.set_index(chem_properties['name'])
         return w
 
-    def get_x_a(self, data, x_col_idx, a_col_idx, x_col_name, a_col_name):
+    def get_x_a(self, data, x_col_idx, a_col_idx, x_col_name, a_col_name, xbounds):
         self.check_x_a(x_col_idx, a_col_idx, x_col_name, a_col_name)
 
         if a_col_name == 'sample_name': #for spreadsheets where the data column is the same as sample name
             a_col_name = self.name
 
         if x_col_name and a_col_name:
-            x = data[x_col_name]
 
             xa = data[[x_col_name, a_col_name]]
+            xa = xa.rename(columns={x_col_name:'x', a_col_name: 'a'})
 
         elif x_col_idx and a_col_idx:
-            x = data.iloc[:, x_col_idx]
-
             a = data.iloc[:, a_col_idx]
 
             xa = pd.DataFrame([x, a], columns=['x', 'a'])
-            print('xa: {}'.format(xa))
+            # print('xa: {}'.format(xa))
         else:
             print('Problems finding correct columns for sample {}'.format(self.name))
             return
+        if xbounds:
+            xa = xa[xa['x'] > xbounds[0]]
 
-        a = xa.set_index(xa[x_col_name]).sort_index()
-        a = a.iloc[:, -1]
+        a = xa.set_index(xa['x']).sort_index()
+        a = xa['a']
+        x = xa['x']
 
         return x, a
 

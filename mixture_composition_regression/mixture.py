@@ -6,6 +6,7 @@ from mixture_composition_regression.sample import Sample
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 from matplotlib import cm
+from numpy.random import random
 from itertools import count
 
 
@@ -94,7 +95,8 @@ class Mixture:
         self.da.to_netcdf(savefile, mode=mode)
         return
 
-    def plot_by(self, idx=0,
+    def plot_by(self, 
+                idx=0,
                 cmap_name='cividis',
                 savefig=None,
                 alpha=1,
@@ -102,6 +104,7 @@ class Mixture:
                 spect_bounds=None,
                 xlabel='Wavelength [nm]',
                 ylabel='Absorption [–]',
+                cbarlabel = None,
                 stylesheet=None,
                 ):
         if stylesheet is None:
@@ -118,7 +121,8 @@ class Mixture:
         #     x.append(s.w[idx])
         x = [s.w[idx] for s in self.samples]
         sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=min(x), vmax=max(x)))
-        plt.colorbar(sm, ax=ax)
+        cc = plt.colorbar(sm, ax=ax)
+        cc.set_label(cbarlabel, rotation=270.)
 
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
@@ -172,6 +176,35 @@ class Mixture:
         m = Mixture(m, attrs=self.attrs)
 
         return m
+
+    def random_tts(self, test_fraction, random_seed=None):
+        """
+
+        :param criteria: dict
+        :return:
+        """
+        train_fraction = 1. - test_fraction
+        nsamples = self.da.coords['name'].shape[0]
+        train_size = int(nsamples*train_fraction)
+        rng = np.random.default_rng(seed=random_seed)
+
+        train_samples = rng.choice(self.da.coords['name'].values, train_size, replace=False,)
+
+        train = self.da
+        test = self.da
+
+        for s in self.da.coords['name'].values:
+            if s in train_samples:
+                test = test.drop_sel(name=s).dropna('name', how = 'all')
+            else:
+                train = train.drop_sel(name=s).dropna('name', how = 'all')
+        # train_samples = np.random.choice( )
+        #
+        # test = Mixture(test)
+        # train = Mixture(train)
+
+
+        return train, test
 
 
 def _check_samples(samples):
