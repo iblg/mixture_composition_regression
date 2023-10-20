@@ -151,11 +151,20 @@ def grid_search_dataset(m: xr.Dataset,
 
 def get_Xy_from_dataset(ds: xr.Dataset, xbounds=None, target_chem=None):
     if isinstance(xbounds[0], xr.DataArray) or isinstance(xbounds[0], xr.Dataset):
+        print('xbounds is a DataArray or Dataset')
+        print('xbounds: {}'.format(xbounds))
+
         bds = (ds.x.values > xbounds[0].values) & (ds.x.values < xbounds[1].values)
     else:
+        print('xbounds is not a DataArray or Dataset.')
+        print('xbounds: {}'.format(xbounds))
         bds = (ds.x.values > xbounds[0]) & (ds.x.values < xbounds[1])
-
-    ds = ds.where(bds).dropna('x', how='all')
+    print('bds:')
+    print('type: {}'.format(type(bds)))
+    print('shape: {}'.format(bds.shape))
+    print(bds)
+    ds = ds.where(bds)
+    ds = ds.dropna('x', how='all')
     y = ds.coords[target_chem].values
     X = ds.values
     return y, X
