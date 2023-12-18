@@ -18,7 +18,7 @@ def grid_search_dataset(m: xr.Dataset,
                         nwindows: list,
                         models: list,
                         x_bounds: tuple,
-                        target_chem=None,
+                        target_chem:str = None,
                         tts_test_size: float = None,
                         tts_random_state: int = None,
                         tolerance: float = 0.01,
@@ -151,21 +151,26 @@ def grid_search_dataset(m: xr.Dataset,
 
 def get_Xy_from_dataset(ds: xr.Dataset, xbounds=None, target_chem=None):
     if isinstance(xbounds[0], xr.DataArray) or isinstance(xbounds[0], xr.Dataset):
-        print('xbounds is a DataArray or Dataset')
-        print('xbounds: {}'.format(xbounds))
+        # print('xbounds is a DataArray or Dataset')
+        # print('xbounds: {}'.format(xbounds))
 
         bds = (ds.x.values > xbounds[0].values) & (ds.x.values < xbounds[1].values)
     else:
-        print('xbounds is not a DataArray or Dataset.')
-        print('xbounds: {}'.format(xbounds))
+        # print('xbounds is not a DataArray or Dataset.')
+        # print('xbounds: {}'.format(xbounds))
         bds = (ds.x.values > xbounds[0]) & (ds.x.values < xbounds[1])
-    print('bds:')
-    print('type: {}'.format(type(bds)))
-    print('shape: {}'.format(bds.shape))
-    print(bds)
+
     ds = ds.where(bds)
     ds = ds.dropna('x', how='all')
-    y = ds.coords[target_chem].values
+    
+    # get y
+    if isinstance(target_chem, str):
+        y = ds.coords[target_chem].values
+    elif isinstance(target_chem, list):          
+        y = [ds.coords[chem].values for chem in target_chem]
+        y = np.array(y).T
+        
+    # get x
     X = ds.values
     return y, X
 
