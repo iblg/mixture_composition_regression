@@ -112,11 +112,11 @@ models.append(best_knnr)
 mse_values.append(mean_squared_error(y_cv, best_knnr.predict(X_cv)))
 
 # Model 4: Multi-layer Perceptron (MLP)
-grid_search_mlp = GridSearchCV(MLPRegressor(), param_grid_mlp, cv=5)
-grid_search_mlp.fit(X_train, y_train)
-best_mlp = grid_search_mlp.best_estimator_
-models.append(best_mlp)
-mse_values.append(mean_squared_error(y_cv, best_mlp.predict(X_cv)))
+#grid_search_mlp = GridSearchCV(MLPRegressor(), param_grid_mlp, cv=5)
+#grid_search_mlp.fit(X_train, y_train)
+#best_mlp = grid_search_mlp.best_estimator_
+#models.append(best_mlp)
+#mse_values.append(mean_squared_error(y_cv, best_mlp.predict(X_cv)))
 
 # Model 5: Partial Least Squares (PLS)
 grid_search_pls = GridSearchCV(PLSRegression(), param_grid_pls, cv=5)
