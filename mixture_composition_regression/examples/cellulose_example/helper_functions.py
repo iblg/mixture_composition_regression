@@ -27,22 +27,40 @@ def read_predictor_files(filenames: list):
     return predictors
 
 
+def read_uncertainty_files(filenames: list):
+    u = [read_uncertainty_file(f) for f in filenames]
+    return u
+
+
+def read_uncertainty_file(f: str):
+    """
+
+    :param f: Filename
+    :return:
+    """
+    with open(f, 'r') as file:
+        data = file.readlines()
+
+    data = [float(i.strip()) for i in data]
+    return data
+
+
 def predict_on_test_csvs(fpath, bestmodel_container, regressand, target, sample_name=None, print_sample=False,
                          printres=False, xgrid=None):
     new_data = pd.read_csv(fpath,
                            #                        names=['wavenumber', 'absorbance'],
                            header=0,
                            # it was reading in the first row as data and causing problems. So I just had it read the
-                           # column namese from the first row
+                           # column names from the first row
                            dtype='float')
 
     # renamed for less typing, but you can absolutely get rid of these column names and just rename to your preference
     new_data = new_data.rename(columns={new_data.columns[0]: 'x', new_data.columns[1]: 'y'})
 
-    if xgrid is None: # if the data needs to be re-gridded
+    if xgrid is None:  # if the data needs to be re-gridded
         pass
     else:
-        new_data = regrid_ir_spectrum(new_data,xgrid)
+        new_data = regrid_ir_spectrum(new_data, xgrid)
     # because if you look higher in the code, we are currently regressing on the derivative of the data
     # so I calculated the derivative here
     if regressand == 'a':
@@ -78,7 +96,7 @@ def predict_on_test_csvs(fpath, bestmodel_container, regressand, target, sample_
 
 
 def regrid_ir_spectrum(data: pd.DataFrame, xgrid: np.array):
-    # assuming the data has only absorption data in a column called 'a' and wavenumbers in a column called 'x'
+    # assuming the data has only absorption data in a column called 'y' and wavenumbers in a column called 'x'
     # do the regridding and add the new x axis as a column
     data2 = pd.DataFrame()
     # print(data)
